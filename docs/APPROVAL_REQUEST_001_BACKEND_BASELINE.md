@@ -1,77 +1,72 @@
-# APPROVAL REQUEST 001 — Baseline Schema Backend (DRAFT)
+# APPROVAL REQUEST 001 — Paket Backend (satu halaman, tinggal checklist)
 
 > Untuk: Teamleader
 > Dari: Sugeng Riyanto (Backend)
 > Branch: `feat/backend-contracts-baseline-draft`
-> Status: **Menunggu keputusan. JANGAN merge / apply ke Supabase sebelum semua kotak di bawah dicentang.**
-> File yang direview: `docs/BACKEND_SCHEMA_DRAFT.md`
+> Status: **Menunggu keputusan. JANGAN merge / apply ke Supabase sebelum semua kotak Bagian 5 dicentang.**
+> Cara approve: centang per kotak (`Setuju` / `Ubah: ...`), lalu Approve / Request Changes di PR.
 
 ---
 
-## 1. Objective (Tujuan)
+## 1. Objective
 
-Mengunci fondasi backend supaya tidak bolak-balik:
+Kunci fondasi backend sekali jalan agar tidak bolak-balik: 6 tabel persis kontrak, RLS aman, env + spek API jelas. Tanpa tabel khayalan, tanpa secret, tanpa sentuh production.
 
-1. 6 tabel persis dari kontrak (`docs/CONTRACTS.md`): `players`, `game_sessions`, `player_positions`, `quests`, `quest_progress`, `rewards`.
-2. Tidak ada tabel tambahan.
-3. RLS aktif, default-tolak, tanpa policy dulu (auth Phase 5 belum diputuskan).
+## 2. Isi paket (7 file, 1 PR)
 
-## 2. Context (Latar singkat)
+| # | File | Isi singkat |
+|---|------|-------------|
+| 1 | `docs/BACKEND_SCHEMA_DRAFT.md` | Draf pemetaan 1:1 kontrak → SQL + 8 pertanyaan awal (Q1–Q8) |
+| 2 | `supabase/migrations/0001_baseline.sql` | Migrasi final baseline: 6 tabel, RLS ON deny-by-default |
+| 3 | `supabase/migrations/0002_rls_phase5.sql` | Policy RLS: pemilik kelola miliknya, rewards read-only (anti-cheat) |
+| 4 | `.env.example` | Nama variabel saja (usulan shared, tanpa nilai) |
+| 5 | `docs/BACKEND_API_SPEC.md` | DRAFT endpoint server-validated (jawab → grant reward 1 transaksi) |
+| 6 | `docs/BACKEND_PHASE5_PREP.md` | Checklist setup Supabase + urutan eksekusi |
+| 7 | File ini | Halaman approval tunggal |
 
-- Repo masih Phase 0: belum ada kode aplikasi (`docs/IMPLEMENTATION_PLAN.md:3-15`).
-- Kontrak adalah satu-satunya sumber kebenaran (`docs/CONTRACTS.md:12-13`).
-- Auth = game-local only, SSO ditunda (`docs/ARCHITECTURE.md:35`).
-- Frontend tidak boleh pegang service-role (`docs/ARCHITECTURE.md:37-39`).
-- Maks 30 pemain per instance (`docs/CONTEXT.md:24`).
+## 3. Yang sengaja TIDAK ada (butuh kontrak baru + agree frontend)
 
-## 3. Scope (Batasan jelas)
+Tabel `avatars/npcs/challenges/monsters/inventory` — disebut di `docs/GAME_DESIGN.md:5-21` tapi belum di `docs/CONTRACTS.md`. Aturan: `docs/CONTRACTS.md:99-104`.
 
-**Masuk:**
-- `docs/BACKEND_SCHEMA_DRAFT.md` (+187 baris): pemetaan 1:1 kontrak → SQL + RLS.
+## 4. Keputusan backend yang sudah dikunci (milik backend per `CONTRACTS.md:5`, `TEAM_WORKFLOW.md:46,67`)
 
-**Sengaja TIDAK masuk (butuh kontrak baru dulu):**
-- Tabel `avatars`, `npcs`, `challenges`, `monsters`, `inventory/items` — disebut di `docs/GAME_DESIGN.md` tapi belum ada di `docs/CONTRACTS.md`.
-- Policy RLS berbasis user — menunggu keputusan auth Phase 5.
-- Folder `supabase/migrations/` final — menunggu Q8.
+- PK `player_positions` = komposit `(session_id, player_id)` (kontrak tanpa `id`).
+- Kolom DB `sort_order`, API tetap `order` (tanpa breaking change).
+- Default `gen_random_uuid()` + `now()`, CHECK wajar, `UNIQUE(player_id, quest_id)`.
+- RLS deny-by-default; `service_role` hanya server-side (`docs/ARCHITECTURE.md:37-39`).
 
-## 4. Steps (Yang TL lakukan — ±5 menit)
+## 5. Checklist TL (tinggal centang)
 
-1. Buka file `docs/BACKEND_SCHEMA_DRAFT.md`.
-2. Untuk setiap Q1–Q8 di bawah, tulis keputusan: `Setuju` atau `Ubah: ...`.
-3. Jika semua setuju → Approve PR.
-4. Jika ada yang diubah → Request Changes, saya revisi 1x di branch yang sama.
+### A. Migrasi baseline (`0001`)
+- [ ] A1. Setuju 6 tabel 1:1 kontrak, tanpa tabel tambahan? (___)
+- [ ] A2. Setuju PK komposit + `sort_order` + default + CHECK + UNIQUE? (___)
 
-## 5. Keputusan yang dibutuhkan (Q1–Q8)
+### B. RLS + anti-cheat (`0002`)
+- [ ] B1. Setuju rewards read-only dari client, grant via server? (___)
+- [ ] B2. Setuju quest hanya bisa `insert active`, complete via server? (___)
+- [ ] B3. Setuju posisi: baca sync + tulis milik sendiri (max 30/instance)? (___)
 
-- [ ] **Q1 — Kunci utama `player_positions`:** kontrak tidak punya `id`. Usulan: kunci komposit `(session_id, player_id)` = 1 baris per pemain per sesi. Alternatif: tambah `id` baru. Keputusan TL: ______
-- [ ] **Q2 — `Quest.order` → `sort_order`:** kata `order` tidak boleh jadi nama kolom SQL. Usulan: pakai `sort_order`. Keputusan TL: ______
-- [ ] **Q3 — Nilai otomatis:** usulan default `gen_random_uuid()` untuk id dan `now()` untuk waktu. Kontrak tidak menulis ini. Setuju / hapus? Keputusan TL: ______
-- [ ] **Q4 — Cegah duplikat:** usulan `UNIQUE(player_id, quest_id)` di `quest_progress`. Hapus jika quest boleh diulang. Keputusan TL: ______
-- [ ] **Q5 — Batas wajar:** usulan `level >= 1`, `xp/coins >= 0`, `selesai >= mulai`. Tidak ada di kontrak. Setuju / hapus? Keputusan TL: ______
-- [ ] **Q6 — Keamanan (RLS):** usulan tolak semua akses dulu sampai auth Phase 5 diputuskan. Server-side via service-role tetap bisa. Setuju? Keputusan TL: ______
-- [ ] **Q7 — Tidak tambah tabel:** setuju TIDAK buat avatar/npc/challenge/monster/inventory sampai ada kontrak baru yang disetujui frontend? Keputusan TL: ______
-- [ ] **Q8 — Lokasi final:** setelah approve, draft dipindah ke `supabase/migrations/0001_baseline.sql`. Setuju? Keputusan TL: ______
+### C. Env + API + rencana
+- [ ] C1. Setuju nama env di `.env.example` (nilai via secret manager, bukan git)? (___)
+- [ ] C2. Setuju spek API server-validated (client tak kirim xp/coins sendiri)? (___)
+- [ ] C3. Setuju metode auth game-local: email/password dulu? (___)
 
-## 6. Output (Hasil setelah approve)
+### D. Final
+- [ ] D1. Setuju lokasi `supabase/migrations/`? (___)
+- [ ] D2. Boleh merge PR ini ke `main` setelah semua di atas `Setuju`? (___)
 
-- [ ] Draft menjadi 1 file migrasi final. Selesai, tidak diubah lagi.
-- [ ] Backend lanjut ke paket berikut tanpa bongkar ulang: usulan kontrak baru (Avatar/NPC/Challenge/Inventory) dalam bentuk issue, bukan tabel langsung.
-- [ ] RLS policy Phase 5 didesain terpisah setelah auth diputuskan.
+## 6. Output setelah semua `Setuju`
 
-## 7. Referensi (tanpa tambahan)
+- [ ] Merge PR → baseline terkunci, tidak diubah lagi.
+- [ ] Apply `0001` + `0002` ke project Supabase game (manual, oleh backend).
+- [ ] Lanjut: policy lanjutan + implementasi API Phase 5 + usulan kontrak baru sebagai issue.
 
-| Dokumen | Bagian |
-|---|---|
-| `docs/CONTRACTS.md` | Player:15-27, GameSession:29-40, PlayerPosition:42-54, Quest:56-69, QuestProgress:72-83, Reward:85-97, aturan perubahan:99-104 |
-| `docs/ARCHITECTURE.md` | Auth Phase 5:35, service-role:37-39 |
-| `docs/CONTEXT.md` | 30 pemain/instance:24 |
-| `docs/GAME_DESIGN.md` | Avatar/NPC/Quest/Challenge/Monster:5-21 |
-| `docs/IMPLEMENTATION_PLAN.md` | Phase 0:3-15, Phase 5:75-85 |
-| `TEAM_WORKFLOW.md` | 1 PR 1 concern, review domain owner:50-72 |
+## 7. Referensi
+
+`docs/CONTRACTS.md:15-97` (6 kontrak), `:99-104` (aturan ubah) · `docs/ARCHITECTURE.md:35` (auth game-local), `:37-39` (no service-role frontend) · `docs/CONTEXT.md:24` (30/instance) · `docs/IMPLEMENTATION_PLAN.md:75-85` (Phase 5) · `TEAM_WORKFLOW.md:46,67`.
 
 ## 8. Verifikasi pengaju
 
-- [x] Isi 1:1 dari kontrak, tanpa tabel khayalan
-- [x] Tanpa secret / kredensial
-- [x] Tanpa akses database production
-- [ ] Menunggu 8 keputusan TL di atas
+- [x] Tanpa secret, tanpa akses production
+- [x] 1 PR 1 paket backend, branch terpisah dari frontend
+- [ ] Menunggu checklist A–D TL
