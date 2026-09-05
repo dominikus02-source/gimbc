@@ -16,8 +16,11 @@
 2. `supabase/migrations/0002_rls_phase5.sql` — policy baca/tulis pemilik, rewards read-only.
 3. `supabase/migrations/0003_grant_reward.sql` — fungsi `complete_quest` (service_role only).
 4. `supabase/migrations/0004_instances.sql` — fungsi `join_instance`/`leave_instance` + cap 30.
+5. `supabase/migrations/0005_security_hardening.sql` — server-owned players + EXISTS session check.
 
 Jalankan satu file, pastikan sukses, baru lanjut ke berikut. Jangan paralel.
+Setelah `0005`: aktifkan pgTAP (`create extension if not exists pgtap;`) lalu run
+`supabase/tests/0005_security_tests.sql` — GREEN = 8/8 tanpa error.
 
 ## 3. Verifikasi setelah apply (read-only, aman)
 
@@ -37,7 +40,7 @@ Hasil harapan: 6 baris tiap cek tabel; `rowsecurity = true`; `rewards` hanya pol
 
 ## 4. Rollback (HANYA dengan persetujuan eksplisit — operasi destruktif)
 
-Urutan balik `0004 → 0001` (drop function dulu, baru tabel). Tulis perintahnya saat dibutuhkan,
+Urutan balik `0005 → 0001` (drop function dulu, baru tabel). Tulis perintahnya saat dibutuhkan,
 jangan disiapkan permanen di repo agar tak terpencet.
 
 ## 5. Yang DILARANG
