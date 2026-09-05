@@ -44,13 +44,25 @@ jobs:
           PGPASSWORD: postgres
           PGOPTIONS: "-c search_path=public,extensions"
         run: |
+          set +e
           psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            -f supabase/tests/ci_auth_stub.sql
+            -f supabase/tests/ci_auth_stub.sql > apply.log 2>&1
+          if [ $? -ne 0 ]; then
+            echo "::error::STUB FAILED: $(grep -iE 'error|fatal' apply.log | head -3 | cut -c1-400)"
+            cat apply.log
+            exit 1
+          fi
           for m in 0001_baseline 0002_rls_phase5 0003_grant_reward 0004_instances 0005_security_hardening; do
             echo "Applying $m"
             psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
-              -f supabase/migrations/$m.sql
+              -f supabase/migrations/$m.sql > apply.log 2>&1
+            if [ $? -ne 0 ]; then
+              echo "::error::APPLY $m FAILED: $(grep -iE 'error|fatal' apply.log | head -3 | cut -c1-400)"
+              cat apply.log
+              exit 1
+            fi
           done
+          echo 'MIGRATIONS OK'
 
       - name: Run pgTAP security tests
         env:
