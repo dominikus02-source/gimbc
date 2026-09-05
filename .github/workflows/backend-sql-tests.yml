@@ -52,7 +52,7 @@ jobs:
             cat apply.log
             exit 1
           fi
-          for m in 0001_baseline 0002_rls_phase5 0003_grant_reward 0004_instances 0005_security_hardening; do
+          for m in 0001_baseline 0002_rls_phase5 0003_grant_reward 0004_instances 0005_security_hardening 0006_rbac_crud; do
             echo "Applying $m"
             psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
               -f supabase/migrations/$m.sql > apply.log 2>&1
