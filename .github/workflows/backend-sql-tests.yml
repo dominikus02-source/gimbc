@@ -1,0 +1,66 @@
+name: backend-sql-tests
+
+# Menjalankan migrasi 0001-0005 + pgTAP negative tests di tiap push yang
+# menyentuh supabase/. Tanpa secret, tanpa database production (postgres CI saja).
+on:
+  push:
+    paths:
+      - "supabase/**"
+      - ".github/workflows/backend-sql-tests.yml"
+  pull_request:
+    paths:
+      - "supabase/**"
+  workflow_dispatch:
+
+jobs:
+  sql-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: supabase/postgres:15.1.0.147
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for postgres
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -U postgres && break || sleep 2
+          done
+
+      - name: Apply migrations in order
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            -c "create extension if not exists pgtap;"
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            -f supabase/tests/ci_auth_stub.sql
+          for m in 0001_baseline 0002_rls_phase5 0003_grant_reward 0004_instances 0005_security_hardening; do
+            psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
+              -f supabase/migrations/$m.sql
+          done
+
+      - name: Run pgTAP security tests
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            -f supabase/tests/0005_security_tests.sql > tap.out 2>&1 || true
+          cat tap.out
+          if grep -qE '^not ok' tap.out; then
+            echo 'SECURITY TESTS FAILED'
+            exit 1
+          fi
+          echo 'SECURITY TESTS GREEN'
