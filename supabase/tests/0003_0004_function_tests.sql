@@ -71,8 +71,8 @@ select lives_ok(
   $$ select join_instance('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bahasa-village', null) $$,
   'F11 join auto ALLOWED');
 
-insert into players (id, username, avatar_id)
-select gen_random_uuid(), 'filler' || g, 'av1' from generate_series(1, 30) g
+insert into players (id, username, avatar_id, level, xp, coins)
+select gen_random_uuid(), 'filler' || g, 'av1', 1, 0, 0 from generate_series(1, 30) g
 on conflict do nothing;
 
 insert into game_sessions (instance_id, player_id, world_id)
