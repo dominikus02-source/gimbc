@@ -15,6 +15,7 @@
 ### 1. Profil
 - `GET /api/player/me` → `Player`
 - `PATCH /api/player/me` body `{ username?, avatarId? }` → `Player`
+  - Via fungsi server `update_profile()` (service_role). Client tanpa UPDATE langsung.
   - `level/xp/coins` TIDAK bisa diubah client (server-side only).
 
 ### 2. Quest
