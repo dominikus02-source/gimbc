@@ -2,7 +2,7 @@
 -- Menyediakan ekstensi + auth.uid() + auth.users minimal agar migrasi 0001-0005 dan
 -- pgTAP tests bisa jalan di postgres CI. Semua objek dibuat hanya jika
 -- belum ada (guard), jadi aman jika image sudah menyediakannya.
-do $$
+do $do$
 begin
   if not exists (select 1 from pg_extension where extname = 'pgcrypto') then
     create extension pgcrypto with schema public;
@@ -11,11 +11,11 @@ begin
     create extension pgtap with schema public;
   end if;
 end
-$$;
+$do$;
 
 create schema if not exists auth;
 
-do $$
+do $do$
 begin
   if not exists (
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -26,7 +26,7 @@ begin
     $$ select nullif(current_setting('request.jwt.claims', true)::json->>'sub', '')::uuid $$;
   end if;
 end
-$$;
+$do$;
 
 create table if not exists auth.users (
   id uuid primary key,
