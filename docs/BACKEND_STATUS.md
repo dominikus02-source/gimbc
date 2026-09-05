@@ -15,10 +15,12 @@
 | 5. Runbook | apply 0001→0004 + verifikasi | ✅ main |
 | 6. Security final | `0005` server-owned players + EXISTS session + 8 tests | ✅ main, CI hijau |
 | 7. CI | workflow + stub, hijau tiap push | ✅ main |
-| 8. Function tests | 14 tests `complete_quest`/`update_profile`/join/leave | ⏳ branch `feat/backend-function-tests`, CI hijau |
-| 9. Integrasi frontend | `FRONTEND_INTEGRATION.md` | ⏳ branch `feat/backend-frontend-integration` |
-| 10. Auth | rekomendasi email/password | ⏳ butuh 1 centang TL |
-| 11. Realtime notes | channel `instance:{id}` (usulan) | ⏳ butuh agree frontend |
+| 8. Function tests | 14 tests `complete_quest`/`update_profile`/join/leave | ✅ main (merge Dominikus), CI hijau |
+| 9. Integrasi frontend | `FRONTEND_INTEGRATION.md` | ✅ main (merge Dominikus) |
+| 10. Auth | rekomendasi email/password | ✅ main (dokumen); method butuh 1 centang TL |
+| 11. Realtime notes | channel `instance:{id}` (usulan) | ✅ main (dokumen); butuh agree frontend |
+| 12. RBAC CRUD | `0006` `start_quest` + level-gate + matriks + 6 tests | ⏳ branch `feat/backend-0006-rbac-crud`, CI hijau |
+| 13. Reports | daily/weekly + template | ✅ main (merge Dominikus) |
 
 ## Keputusan terbuka (pemilik)
 
