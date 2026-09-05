@@ -64,16 +64,21 @@ jobs:
           done
           echo 'MIGRATIONS OK'
 
-      - name: Run pgTAP security tests
+      - name: Run pgTAP tests
         env:
           PGPASSWORD: postgres
           PGOPTIONS: "-c search_path=public,extensions"
         run: |
-          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            -f supabase/tests/0005_security_tests.sql > tap.out 2>&1 || true
+          : > tap.out
+          for t in supabase/tests/*_tests.sql; do
+            echo "Running $t"
+            psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
+              -f "$t" >> tap.out 2>&1 || true
+          done
           cat tap.out
-          if grep -qE '^not ok' tap.out; then
-            echo 'SECURITY TESTS FAILED'
+          if grep -qE '^not ok' tap.out || grep -qiE 'psql:.*(ERROR|FATAL)' tap.out; then
+            echo "::error::PGTAP FAILURES: $(grep -E '^not ok' tap.out | head -5 | cut -c1-300) // ERR: $(grep -iE 'ERROR|FATAL' tap.out | head -4 | cut -c1-300)"
+            echo 'PGTAP TESTS FAILED'
             exit 1
           fi
-          echo 'SECURITY TESTS GREEN'
+          echo 'PGTAP TESTS GREEN'
