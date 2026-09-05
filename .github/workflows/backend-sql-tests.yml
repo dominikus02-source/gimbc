@@ -42,12 +42,12 @@ jobs:
       - name: Apply migrations in order
         env:
           PGPASSWORD: postgres
+          PGOPTIONS: "-c search_path=public,extensions"
         run: |
-          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
-            -c "create extension if not exists pgtap;"
           psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
             -f supabase/tests/ci_auth_stub.sql
           for m in 0001_baseline 0002_rls_phase5 0003_grant_reward 0004_instances 0005_security_hardening; do
+            echo "Applying $m"
             psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
               -f supabase/migrations/$m.sql
           done
@@ -55,6 +55,7 @@ jobs:
       - name: Run pgTAP security tests
         env:
           PGPASSWORD: postgres
+          PGOPTIONS: "-c search_path=public,extensions"
         run: |
           psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
             -f supabase/tests/0005_security_tests.sql > tap.out 2>&1 || true

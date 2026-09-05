@@ -1,7 +1,18 @@
 -- ci_auth_stub.sql — STUB KHUSUS CI. JANGAN apply ke project Supabase asli.
--- Menyediakan auth.uid() + auth.users minimal agar migrasi 0001-0005 dan
--- pgTAP tests bisa jalan di postgres polos. Semua objek dibuat hanya jika
--- belum ada (IF NOT EXISTS / guard), jadi aman jika image sudah menyediakannya.
+-- Menyediakan ekstensi + auth.uid() + auth.users minimal agar migrasi 0001-0005 dan
+-- pgTAP tests bisa jalan di postgres CI. Semua objek dibuat hanya jika
+-- belum ada (guard), jadi aman jika image sudah menyediakannya.
+do $$
+begin
+  if not exists (select 1 from pg_extension where extname = 'pgcrypto') then
+    create extension pgcrypto with schema public;
+  end if;
+  if not exists (select 1 from pg_extension where extname = 'pgtap') then
+    create extension pgtap with schema public;
+  end if;
+end
+$$;
+
 create schema if not exists auth;
 
 do $$
