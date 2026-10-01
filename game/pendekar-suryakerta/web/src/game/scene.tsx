@@ -139,7 +139,7 @@ function Knight({ world }: { world: World }) {
   const ref = useRef<THREE.Group>(null);
   const sword = useRef<THREE.Group>(null);
   const cape = useRef<THREE.Mesh>(null);
-  const crystal = useRef<THREE.Mesh>(null);
+  const crystal = useRef<THREE.Mesh>(null);\n  const swordGlow = useRef<THREE.Mesh>(null);
   useFrame(() => {
     const p = world.player;
     const g = ref.current;
@@ -198,7 +198,7 @@ function EnemyView({ world, index }: { world: World; index: number }) {
   const shade = useRef<THREE.Group>(null);
   const brute = useRef<THREE.Group>(null);
   const wisp = useRef<THREE.Group>(null);
-  const boss = useRef<THREE.Group>(null);
+  const boss = useRef<THREE.Group>(null);\n  const spawnRing = useRef<THREE.Mesh>(null);\n  const bossAura = useRef<THREE.Mesh>(null);\n  const bossCore = useRef<THREE.Mesh>(null);
   const hpFill = useRef<THREE.Mesh>(null);
   const hpBg = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
@@ -212,7 +212,7 @@ function EnemyView({ world, index }: { world: World; index: number }) {
     g.rotation.y = e.yaw + Math.PI;
     const lit = e.flash > 0 || e.wind > 0.05;
     const hitScale = e.flash > 0 ? 1 + Math.min(0.08, e.flash * 0.7) : 1;
-    const rageScale = e.kind === "boss" ? 1 + e.rage * 0.035 : 1;
+    const rageScale = e.kind === "boss" ? 1 + e.rage * 0.035 : 1;\n    const spawnK = e.spawnT > 0 ? Math.max(0, 1 - e.spawnT / (e.kind === "boss" ? 1.25 : 0.52)) : 1;
     const idlePulse = 1 + Math.sin(world.time * 5 + index) * 0.025;
     if (shade.current) {
       shade.current.visible = e.kind === "shade";
@@ -228,7 +228,7 @@ function EnemyView({ world, index }: { world: World; index: number }) {
         boss.current.scale.setScalar(pulse);
       }
     }
-    g.scale.setScalar((lit ? 1.06 : 1) * hitScale * rageScale);
+    g.scale.setScalar((lit ? 1.06 : 1) * hitScale * rageScale * (0.72 + spawnK * 0.28));\n    if (spawnRing.current) {\n      const spawning = e.spawnT > 0;\n      spawnRing.current.visible = spawning;\n      if (spawning) {\n        const p = 1 - e.spawnT / (e.kind === "boss" ? 1.25 : 0.52);\n        spawnRing.current.position.set(0, 0.08, 0);\n        spawnRing.current.scale.setScalar(0.7 + p * (e.kind === "boss" ? 3.8 : 2.2));\n        const mat = spawnRing.current.material as THREE.MeshBasicMaterial;\n        mat.opacity = (1 - p) * (e.kind === "boss" ? 0.72 : 0.38);\n      }\n    }\n    if (bossAura.current && bossCore.current) {\n      const isBoss = e.kind === "boss";\n      bossAura.current.visible = isBoss;\n      bossCore.current.visible = isBoss;\n      if (isBoss) {\n        const rage = e.rage;\n        bossAura.current.scale.setScalar(1 + rage * 0.28 + Math.sin(world.time * 4.5) * 0.05);\n        bossCore.current.scale.setScalar(1 + rage * 0.18 + Math.sin(world.time * 7) * (0.04 + rage * 0.02));\n        (bossAura.current.material as THREE.MeshBasicMaterial).opacity = 0.18 + rage * 0.12;\n        (bossCore.current.material as THREE.MeshBasicMaterial).opacity = 0.18 + rage * 0.1;\n      }\n    }
     const hpRatio = Math.max(0, Math.min(1, e.hp / Math.max(1, e.maxHp)));
     const showHp = e.kind === "boss" || hpRatio < 0.999;
     if (hpFill.current && hpBg.current) {
@@ -241,7 +241,7 @@ function EnemyView({ world, index }: { world: World; index: number }) {
     }
   });
   return (
-    <group ref={ref} visible={false}>
+    <group ref={ref} visible={false}>\n      <mesh ref={spawnRing} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]} visible={false}>\n        <ringGeometry args={[0.7, 0.76, 48]} />\n        <meshBasicMaterial color="#d6b46a" transparent opacity={0.5} depthWrite={false} side={THREE.DoubleSide} />\n      </mesh>
       <mesh ref={hpBg} position={[0, 2.05, 0]} scale={[1.55, 0.12, 1]} visible={false}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial color="#111317" transparent opacity={0.78} depthWrite={false} />
