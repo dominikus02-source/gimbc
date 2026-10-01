@@ -86,11 +86,16 @@ export function Overlay({ world }: { world: World }) {
           </div>
           <div className="flex items-start gap-2">
             {playing && <button type="button" className="game-chip pointer-events-auto rounded-xl p-2 text-muted" onClick={() => { world.phase = "paused"; world.publish(true); }} aria-label="Jeda"><Pause className="size-4" /></button>}
+            <button type="button" className="game-chip pointer-events-auto rounded-xl p-2 text-muted md:hidden" onClick={() => world.toggleMute()} aria-label={hud.muted ? "Nyalakan suara" : "Matikan suara"}>{hud.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}</button>
             <div className="game-panel flex flex-col items-end gap-1 rounded-2xl px-3 py-2">
               <p className="text-[10px] font-medium tracking-[0.18em] text-muted uppercase">Gelombang</p>
               <p className="font-display text-2xl leading-none text-fg tabular-nums">{hud.wave}</p>
-              <p className="text-xs text-muted tabular-nums">{hud.souls} jiwa</p>
-              <p className="text-[10px] text-subtle tabular-nums">Terbaik {hud.bestWave}</p>
+              <div className="flex items-center gap-2 text-xs text-muted tabular-nums">
+                <span>{hud.foes} musuh</span>
+                <span className="text-subtle">·</span>
+                <span>{hud.souls} jiwa</span>
+              </div>
+              <p className="text-[10px] text-subtle tabular-nums">Terbaik gelombang {hud.bestWave}</p>
             </div>
           </div>
         </header>
