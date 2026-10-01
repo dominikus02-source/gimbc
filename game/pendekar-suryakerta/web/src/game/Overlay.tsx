@@ -181,7 +181,7 @@ export function Overlay({ world }: { world: World }) {
               <div><dt className="text-subtle">Gelombang</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.wave}</dd></div>
               <div><dt className="text-subtle">Jiwa</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.souls}</dd></div>
               <div><dt className="text-subtle">Dikalahkan</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.kills}</dd></div>
-              <div><dt className="text-subtle">Terbaik</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.bestSouls}</dd></div>
+              <div><dt className="text-subtle">Jiwa terbaik</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.bestSouls}</dd></div>
             </dl>
             <button type="button" onClick={() => world.restart()} className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent font-medium text-accent-fg"><Swords className="size-4" />Bertarung Lagi</button>
           </div>
