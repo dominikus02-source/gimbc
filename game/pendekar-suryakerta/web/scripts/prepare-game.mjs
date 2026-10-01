@@ -10,7 +10,7 @@ const encoded = names.map((name) => fs.readFileSync(path.join(partsDir, name), "
 const archive = zlib.gunzipSync(Buffer.from(encoded, "base64"));
 const tmp = path.join(root, ".grok-source.tgz");
 fs.writeFileSync(tmp, archive);
-execFileSync("tar", ["-xzf", tmp, "-C", root], { stdio: "inherit" });
+execFileSync("tar", ["-xf", tmp, "-C", root], { stdio: "inherit" });
 fs.rmSync(tmp, { force: true });
 
 const replace = (file, changes) => {
