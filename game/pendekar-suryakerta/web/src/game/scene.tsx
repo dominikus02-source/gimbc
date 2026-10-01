@@ -593,6 +593,7 @@ export function GameCanvas({ world }: { world: World }) {
       <ambientLight intensity={0.38} />
       <directionalLight castShadow position={[14, 24, 10]} intensity={2.2} color="#c2ced6" shadow-mapSize={[1024, 1024]} shadow-camera-near={2} shadow-camera-far={70} shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} />
       <Stars radius={90} depth={40} count={900} factor={2.4} saturation={0.15} fade speed={0.3} />
+      <WorldDressing />
       <Arena world={world} />
       <Knight world={world} />
       <Enemies world={world} />
