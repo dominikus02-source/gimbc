@@ -414,6 +414,40 @@ function DamageNumbers({ world }: { world: World }) {
   );
 }
 
+function ImpactFx({ world }: { world: World }) {
+  const ring = useRef<THREE.Mesh>(null);
+  const flash = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const r = ring.current;
+    const f = flash.current;
+    const active = world.impactT > 0;
+    if (!r || !f) return;
+    r.visible = active;
+    f.visible = active;
+    if (!active) return;
+    const progress = 1 - world.impactT / (world.impactStrength > 1 ? 0.24 : 0.17);
+    const strength = world.impactStrength;
+    r.position.set(world.impactX, 0.11, world.impactZ);
+    r.scale.setScalar((0.35 + progress * 1.7) * strength);
+    const rm = r.material as THREE.MeshBasicMaterial;
+    rm.opacity = Math.max(0, (1 - progress) * 0.72);
+    f.position.set(world.impactX, 0.82, world.impactZ);
+    f.scale.setScalar((1 - progress * 0.55) * (0.8 + strength * 0.25));
+    const fm = f.material as THREE.MeshBasicMaterial;
+    fm.opacity = Math.max(0, (1 - progress) * 0.2);
+  });
+  return (
+    <>
+      <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} geometry={shockGeo} visible={false}>
+        <meshBasicMaterial color="#f0d49a" transparent opacity={0.7} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh ref={flash} geometry={sphGeo} visible={false}>
+        <meshBasicMaterial color="#f2efe8" transparent opacity={0.2} depthWrite={false} />
+      </mesh>
+    </>
+  );
+}
+
 function PerfectDodgeFx({ world }: { world: World }) {
   const ref = useRef<THREE.Mesh>(null);
   useFrame(() => {
@@ -544,7 +578,7 @@ export function GameCanvas({ world }: { world: World }) {
       <ProjectileTrails world={world} />
       <Particles world={world} />
       <SlashFx world={world} />
-      <PerfectDodgeFx world={world} />
+      <ImpactFx world={world} />\n      <PerfectDodgeFx world={world} />
       <ShockwaveFx world={world} />
       <DamageNumbers world={world} />
       <Telegraphs world={world} />
