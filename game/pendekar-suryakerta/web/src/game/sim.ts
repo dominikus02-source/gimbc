@@ -34,6 +34,7 @@ export type Enemy = {
   stateT: number;
   hitId: number;
   rage: number;
+  spawnT: number;
   chargeX: number;
   chargeZ: number;
 };
@@ -1126,7 +1127,7 @@ export class World {
     e.rage = 0;
     e.chargeX = this.player.x;
     e.chargeZ = this.player.z;
-    this.burst(e.x, 0.4, e.z, 8, 0.3, 0.4, 0.42, 0.8);
+    this.burst(e.x, 0.4, e.z, kind === "boss" ? 22 : 8, kind === "boss" ? 0.8 : 0.3, kind === "boss" ? 0.28 : 0.4, kind === "boss" ? 0.18 : 0.42, kind === "boss" ? 1.5 : 0.8);
   }
 
   private kindStats(kind: Kind) {
