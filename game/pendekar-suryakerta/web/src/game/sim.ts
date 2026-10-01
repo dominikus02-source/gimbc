@@ -711,6 +711,7 @@ export class World {
     for (const e of this.enemies) {
       if (!e.alive) continue;
       e.flash = Math.max(0, e.flash - dt);
+      e.spawnT = Math.max(0, e.spawnT - dt);
       e.cd = Math.max(0, e.cd - dt);
       const prevWind = e.wind;
       e.wind = Math.max(0, e.wind - dt);
@@ -1124,6 +1125,7 @@ export class World {
     e.wind = 0;
     e.stun = 0;
     e.flash = 0;
+    e.spawnT = kind === "boss" ? 1.25 : 0.52;
     e.state = 0;
     e.stateT = 1.2;
     e.hitId = 0;
@@ -1392,6 +1394,7 @@ export class World {
       stateT: 0,
       hitId: 0,
       rage: 0,
+      spawnT: 0,
       chargeX: 0,
       chargeZ: 0,
     };
