@@ -414,6 +414,45 @@ function DamageNumbers({ world }: { world: World }) {
   );
 }
 
+function AbilityFx({ world }: { world: World }) {
+  const nova = useRef<THREE.Mesh>(null);
+  const snare = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const n = nova.current;
+    const s = snare.current;
+    if (!n || !s) return;
+    const novaOn = world.novaT > 0;
+    n.visible = novaOn;
+    if (novaOn) {
+      const p = 1 - world.novaT / 0.42;
+      n.position.set(world.player.x, 0.1, world.player.z);
+      n.scale.setScalar(0.55 + p * 4.9);
+      const mat = n.material as THREE.MeshBasicMaterial;
+      mat.opacity = (1 - p) * 0.5;
+    }
+    const snareOn = world.snareT > 0;
+    s.visible = snareOn;
+    if (snareOn) {
+      const p = 1 - world.snareT / 0.34;
+      s.position.set(world.player.x, 0.08, world.player.z);
+      s.scale.setScalar(1.1 + p * 2.7);
+      s.rotation.z = world.time * 1.8;
+      const mat = s.material as THREE.MeshBasicMaterial;
+      mat.opacity = (1 - p) * 0.5;
+    }
+  });
+  return (
+    <>
+      <mesh ref={nova} rotation={[-Math.PI / 2, 0, 0]} geometry={shockGeo} visible={false}>
+        <meshBasicMaterial color="#d6b46a" transparent opacity={0.5} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh ref={snare} rotation={[-Math.PI / 2, 0, 0]} geometry={ringGeo} visible={false}>
+        <meshBasicMaterial color="#8ec4be" transparent opacity={0.5} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    </>
+  );
+}
+
 function ImpactFx({ world }: { world: World }) {
   const ring = useRef<THREE.Mesh>(null);
   const flash = useRef<THREE.Mesh>(null);
@@ -578,7 +617,7 @@ export function GameCanvas({ world }: { world: World }) {
       <ProjectileTrails world={world} />
       <Particles world={world} />
       <SlashFx world={world} />
-      <ImpactFx world={world} />\n      <PerfectDodgeFx world={world} />
+      <AbilityFx world={world} />\n      <ImpactFx world={world} />\n      <PerfectDodgeFx world={world} />
       <ShockwaveFx world={world} />
       <DamageNumbers world={world} />
       <Telegraphs world={world} />
