@@ -226,7 +226,6 @@ function EnemyView({ world, index }: { world: World; index: number }) {
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial color="#c45c4a" transparent opacity={0.95} depthWrite={false} />
       </mesh>
-      </mesh>
       <group ref={shade}>
         <mesh geometry={capGeo} material={shadeMat} position={[0, 0.7, 0]} scale={[0.85, 0.85, 0.85]} castShadow />
         <mesh geometry={sphGeo} material={shadeMat} position={[0, 1.28, 0]} scale={[0.22, 0.22, 0.22]} />
