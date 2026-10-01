@@ -668,3 +668,350 @@ export class World {
   private faceNearest(range: number) {
     const p = this.player;
     let best: Enemy | null = null;
+    let bestD = range;
+    for (const e of this.enemies) {
+      if (!e.alive) continue;
+      const d = Math.hypot(e.x - p.x, e.z - p.z);
+      if (d < bestD) {
+        bestD = d;
+        best = e;
+      }
+    }
+    if (best) p.yaw = Math.atan2(-(best.x - p.x), -(best.z - p.z));
+  }
+
+  private castNova() {
+    const p = this.player;
+    sfxPlay.nova();
+    this.addTrauma(0.45);
+    this.shockT = 0.42;
+    this.shockX = p.x;
+    this.shockZ = p.z;
+    this.shockMax = 4.8;
+    this.burst(p.x, 0.8, p.z, 30, 0.85, 0.42, 0.28, 1.7);
+    this.shockwave(p.x, p.z, 4.3, 34 * this.mods.dmg);
+  }
+
+  private castSnare() {
+    const p = this.player;
+    sfxPlay.snare();
+    this.burst(p.x, 0.6, p.z, 16, 0.55, 0.7, 0.72, 1.1);
+    for (const e of this.enemies) {
+      if (!e.alive) continue;
+      if (Math.hypot(e.x - p.x, e.z - p.z) < 5.2 + e.r) {
+        e.stun = Math.max(e.stun, 1.35);
+        this.hurtEnemy(e, 10 * this.mods.dmg, false);
+      }
+    }
+  }
+
+  private wakeBurn(dt: number) {
+    const p = this.player;
+    for (const e of this.enemies) {
+      if (!e.alive) continue;
+      if (Math.hypot(e.x - p.x, e.z - p.z) < 1.7 + e.r) {
+        this.hurtEnemy(e, 18 * dt * this.mods.dmg, false);
+      }
+    }
+  }
+
+  private shockwave(x: number, z: number, r: number, dmg: number) {
+    this.shockT = Math.max(this.shockT, 0.28);
+    this.shockX = x;
+    this.shockZ = z;
+    this.shockMax = Math.max(this.shockMax, r + 0.35);
+    for (const e of this.enemies) {
+      if (!e.alive) continue;
+      if (Math.hypot(e.x - x, e.z - z) < r + e.r) this.hurtEnemy(e, dmg, false);
+    }
+  }
+
+  private tickEnemies(dt: number) {
+    const p = this.player;
+    for (const e of this.enemies) {
+      if (!e.alive) continue;
+      e.flash = Math.max(0, e.flash - dt);
+      e.cd = Math.max(0, e.cd - dt);
+      const prevWind = e.wind;
+      e.wind = Math.max(0, e.wind - dt);
+      const strike = prevWind > 0 && e.wind <= 0;
+      e.stun = Math.max(0, e.stun - dt);
+      e.stateT = Math.max(0, e.stateT - dt);
+      if (e.stun > 0) continue;
+
+      const dx = p.x - e.x;
+      const dz = p.z - e.z;
+      const dist = Math.hypot(dx, dz) || 0.001;
+      const nx = dx / dist;
+      const nz = dz / dist;
+      e.yaw = Math.atan2(-nx, -nz);
+
+      if (e.kind === "shade") this.aiShade(e, dt, nx, nz, dist, strike);
+      else if (e.kind === "brute") this.aiBrute(e, dt, nx, nz, dist, strike);
+      else if (e.kind === "wisp") this.aiWisp(e, dt, nx, nz, dist, strike);
+      else this.aiBoss(e, dt, nx, nz, dist, strike);
+    }
+  }
+
+  private aiShade(e: Enemy, dt: number, nx: number, nz: number, dist: number, strike: boolean) {
+    const side = e.state % 2 === 0 ? 1 : -1;
+    if (dist > 1.45) {
+      const flank = dist < 5.5 ? 0.22 : 0.08;
+      this.moveEntity(e, (nx - nz * side * flank) * e.speed * dt, (nz + nx * side * flank) * e.speed * dt);
+    }
+    if (e.stateT <= 0) {
+      e.state = (e.state + 1) % 2;
+      e.stateT = 1.1 + this.rand() * 0.7;
+    }
+    if (dist < 1.65 && e.cd <= 0 && e.wind <= 0) {
+      e.wind = 0.28;
+      e.cd = 1.05;
+      this.telegraphs.push({ x: e.x + nx * 0.45, z: e.z + nz * 0.45, r: 1.35, t: e.wind, max: e.wind, tone: "merah" });
+      this.burst(e.x, 0.3, e.z, 4, 0.4, 0.75, 0.58, 0.7);
+    }
+    if (strike && dist < 1.95) this.hitPlayer(e.dmg, nx, nz);
+  }
+
+  private aiBrute(e: Enemy, dt: number, nx: number, nz: number, dist: number, strike: boolean) {
+    if (dist > 2.3) this.moveEntity(e, nx * e.speed * dt, nz * e.speed * dt);
+    if (dist < 2.8 && e.cd <= 0 && e.wind <= 0) {
+      e.wind = 0.55;
+      e.cd = 2.3;
+      this.telegraphs.push({ x: e.x + nx * 1.2, z: e.z + nz * 1.2, r: 2.4, t: 0.55, max: 0.55, tone: "emas" });
+      this.burst(e.x, 0.12, e.z, 5, 0.75, 0.3, 0.22, 0.35);
+    }
+    if (strike) {
+      const p = this.player;
+      if (Math.hypot(p.x - e.x, p.z - e.z) < 2.8) this.hitPlayer(e.dmg, nx, nz);
+      this.addTrauma(0.28);
+      this.burst(e.x, 0.2, e.z, 10, 0.45, 0.4, 0.35, 1.1);
+    }
+  }
+
+  private aiWisp(e: Enemy, dt: number, nx: number, nz: number, dist: number, strike: boolean) {
+    const ideal = 7.2;
+    if (dist < ideal - 0.6) this.moveEntity(e, -nx * e.speed * dt, -nz * e.speed * dt);
+    else if (dist > ideal + 0.8) this.moveEntity(e, nx * e.speed * 0.7 * dt, nz * e.speed * 0.7 * dt);
+    else this.moveEntity(e, -nz * e.speed * 0.6 * dt, nx * e.speed * 0.6 * dt);
+    e.y = 1.1 + Math.sin(this.time * 3 + e.x) * 0.18;
+    if (e.cd <= 0 && e.wind <= 0) {
+      e.wind = 0.42;
+      e.cd = 1.65;
+      this.telegraphs.push({ x: this.player.x, z: this.player.z, r: 0.75, t: e.wind, max: e.wind, tone: "biru" });
+      this.burst(e.x, e.y, e.z, 5, 0.55, 0.5, 0.78, 0.9);
+    }
+    if (strike && e.wind <= 0) {
+      this.fire(e.x, e.z, nx, nz, 9.5, 9);
+    }
+  }
+
+  private aiBoss(e: Enemy, dt: number, nx: number, nz: number, dist: number, strike: boolean) {
+    const hpRatio = e.hp / Math.max(1, e.maxHp);
+    const nextRage = hpRatio <= 0.3 ? 2 : hpRatio <= 0.6 ? 1 : 0;
+    if (nextRage > e.rage) {
+      e.rage = nextRage;
+      e.stun = 0;
+      this.banner = nextRage === 2 ? "Penjaga Besar Mengamuk" : "Penjaga Besar Bangkit";
+      this.bannerT = 1.8;
+      this.addTrauma(0.65);
+      sfxPlay.bossPhase();
+      this.burst(e.x, 1.2, e.z, nextRage === 2 ? 34 : 24, 0.9, 0.28, 0.18, 1.8);
+      for (const target of this.enemies) {
+        if (target.alive && target !== e && Math.hypot(target.x - e.x, target.z - e.z) < (nextRage === 2 ? 3.2 : 2.4)) this.hurtEnemy(target, nextRage === 2 ? 12 : 8, false);
+      }
+    }
+    const rageSpeed = e.rage === 2 ? 1.22 : e.rage === 1 ? 1.1 : 1;
+    const rageDamage = e.rage === 2 ? 1.28 : e.rage === 1 ? 1.12 : 1;
+    e.y = 0.15;
+    if (e.stateT <= 0) {
+      e.state = (e.state + 1) % 4;
+      e.stateT = e.state === 2 ? 0.9 : 2.0 / rageSpeed;
+    }
+    if (e.state === 0) {
+      if (dist > 2) this.moveEntity(e, nx * e.speed * rageSpeed * dt, nz * e.speed * rageSpeed * dt);
+      if (dist < 2.6 && e.cd <= 0) {
+        e.cd = 1.6 / rageSpeed;
+        this.hitPlayer(e.dmg * rageDamage, nx, nz);
+      }
+    } else if (e.state === 1) {
+      if (e.wind <= 0 && e.cd <= 0) {
+        e.wind = e.rage === 2 ? 0.55 : 0.7;
+        e.cd = 2 / rageSpeed;
+        this.telegraphs.push({ x: this.player.x, z: this.player.z, r: e.rage === 2 ? 3.7 : 3.2, t: e.wind, max: e.wind, kind: "circle", tone: "merah" });
+        this.burst(e.x, 0.35, e.z, 8, 0.8, 0.28, 0.2, 0.45);
+      }
+      if (strike) {
+        const p = this.player;
+        if (Math.hypot(p.x - e.x, p.z - e.z) < (e.rage === 2 ? 4 : 3.6)) this.hitPlayer(e.dmg * 1.3 * rageDamage, nx, nz);
+        this.addTrauma(0.5);
+      }
+    } else if (e.state === 2) {
+      if (e.cd <= 0) {
+        e.cd = (e.rage === 2 ? 0.62 : 0.85);
+        const count = e.rage === 2 ? 12 : 8;
+        for (let i = 0; i < count; i++) {
+          const a = (i / count) * Math.PI * 2 + this.time;
+          this.fire(e.x, e.z, Math.sin(a), Math.cos(a), e.rage === 2 ? 8.4 : 7.5, 11 * rageDamage);
+        }
+      }
+    } else {
+      if (e.wind <= 0 && e.cd <= 0) {
+        e.wind = e.rage === 2 ? 0.32 : 0.46;
+        e.cd = e.rage === 2 ? 1.45 : 1.85;
+        e.chargeX = this.player.x;
+        e.chargeZ = this.player.z;
+        this.telegraphs.push({ x: e.x, z: e.z, r: e.rage === 2 ? 5.2 : 4.6, t: e.wind, max: e.wind, kind: "cone", yaw: e.yaw, width: e.rage === 2 ? 0.8 : 0.62, tone: "merah" });
+        this.burst(e.x, 0.3, e.z, 12, 0.85, 0.32, 0.18, 1.2);
+      }
+      if (strike) {
+        const dx = e.chargeX - e.x;
+        const dz = e.chargeZ - e.z;
+        const len = Math.hypot(dx, dz) || 1;
+        const sx = dx / len;
+        const sz = dz / len;
+        this.moveEntity(e, sx * 4.2, sz * 4.2);
+        const p = this.player;
+        if (Math.hypot(p.x - e.x, p.z - e.z) < 2.25) this.hitPlayer(e.dmg * 0.9 * rageDamage, sx, sz);
+        this.addTrauma(0.42);
+        this.burst(e.x, 0.35, e.z, 16, 0.9, 0.34, 0.18, 1.4);
+      }
+    }
+  }
+
+  private fire(x: number, z: number, nx: number, nz: number, spd: number, dmg: number) {
+    const pr = this.projs.find((p) => !p.alive);
+    if (!pr) return;
+    pr.alive = true;
+    pr.x = x;
+    pr.z = z;
+    pr.px = x;
+    pr.pz = z;
+    pr.y = 1.05;
+    pr.vx = nx * spd;
+    pr.vz = nz * spd;
+    pr.life = 2.4;
+    pr.dmg = dmg;
+    pr.r = 0.28;
+  }
+
+  private tickProjs(dt: number) {
+    const p = this.player;
+    for (const pr of this.projs) {
+      if (!pr.alive) continue;
+      pr.life -= dt;
+      pr.px = pr.x;
+      pr.pz = pr.z;
+      pr.x += pr.vx * dt;
+      pr.z += pr.vz * dt;
+      if (pr.life <= 0 || Math.hypot(pr.x, pr.z) > ARENA + 1) {
+        pr.alive = false;
+        continue;
+      }
+      if (this.hitPillar(pr.x, pr.z, pr.r)) {
+        pr.alive = false;
+        this.burst(pr.x, pr.y, pr.z, 4, 0.45, 0.7, 0.7, 0.5);
+        continue;
+      }
+      if (Math.hypot(pr.x - p.x, pr.z - p.z) < pr.r + p.r) {
+        pr.alive = false;
+        const dx = p.x - pr.x;
+        const dz = p.z - pr.z;
+        this.hitPlayer(pr.dmg, dx, dz);
+      }
+    }
+  }
+
+  private tickPickups(dt: number) {
+    const p = this.player;
+    for (const u of this.pickups) {
+      if (!u.alive) continue;
+      u.t += dt;
+      u.y = 0.55 + Math.sin(u.t * 4) * 0.12;
+      const dx = p.x - u.x;
+      const dz = p.z - u.z;
+      const d = Math.hypot(dx, dz);
+      const mag = this.mods.magnet;
+      if (d < mag) {
+        const pull = (1 - d / mag) * 14 * dt;
+        u.x += (dx / (d || 1)) * pull;
+        u.z += (dz / (d || 1)) * pull;
+      }
+      if (d < 0.7) {
+        u.alive = false;
+        if (u.kind === "soul") {
+          this.souls += u.val;
+          this.xp += u.val;
+          sfxPlay.pickup();
+          this.checkLevel();
+        } else {
+          p.hp = Math.min(p.maxHp, p.hp + u.val);
+          sfxPlay.pickup();
+        }
+      }
+    }
+  }
+
+  private checkLevel() {
+    while (this.xp >= this.xpNext) {
+      this.xp -= this.xpNext;
+      this.level += 1;
+      this.xpNext = Math.floor(this.xpNext * 1.25);
+      this.player.maxHp += 8;
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + 24);
+      this.banner = `Tingkat ${this.level}`;
+      this.bannerT = 1.6;
+      sfxPlay.win();
+    }
+  }
+
+  private separateEnemies() {
+    for (let i = 0; i < this.enemies.length; i++) {
+      const a = this.enemies[i]!;
+      if (!a.alive) continue;
+      for (let j = i + 1; j < this.enemies.length; j++) {
+        const b = this.enemies[j]!;
+        if (!b.alive) continue;
+        const dx = b.x - a.x;
+        const dz = b.z - a.z;
+        const d = Math.hypot(dx, dz);
+        const min = a.r + b.r + 0.08;
+        if (d < min && d > 0.001) {
+          const push = ((min - d) / 2) * 0.6;
+          const nx = dx / d;
+          const nz = dz / d;
+          a.x -= nx * push;
+          a.z -= nz * push;
+          b.x += nx * push;
+          b.z += nz * push;
+        }
+      }
+    }
+  }
+
+  private checkWaveClear() {
+    if (this.spawnQ.length > 0) return;
+    if (this.enemies.some((e) => e.alive)) return;
+    if (this.phase !== "playing") return;
+    const flawless = this.waveDamageTaken <= 0.01;
+    if (flawless) this.flawlessWaves += 1;
+    const baseHeal = this.wave % 5 === 0 ? 20 : 14;
+    const flawlessBonus = flawless ? 10 : 0;
+    const recoveryBonus = this.player.hp / Math.max(1, this.player.maxHp) < 0.35 ? 10 : 0;
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + baseHeal + flawlessBonus + recoveryBonus);
+    this.player.stamina = this.player.maxStamina;
+    if (flawless) this.souls += 8 + this.wave * 2;
+    this.combo = 0;
+    this.comboT = 0;
+    this.choices = pickRelics(this.owned, () => this.rand(), 3, {
+      wave: this.wave,
+      level: this.level,
+      hpRatio: this.player.hp / Math.max(1, this.player.maxHp),
+      staminaRatio: this.player.stamina / Math.max(1, this.player.maxStamina),
+      owned: this.owned,
+    });
+    this.phase = "pick";
+    sfxPlay.win();
+    this.publish(true);
+  }
+
+  private hitPlayer(dmg: number, dx: number, dz: number) {
