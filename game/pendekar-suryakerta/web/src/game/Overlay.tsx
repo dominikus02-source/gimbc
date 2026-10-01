@@ -65,13 +65,31 @@ function TouchBtn({ label, onHold, className, ready = 1 }: { label: string; onHo
 
 export function Overlay({ world }: { world: World }) {
   const hud = useHud();
-  const enterImmersive = useCallback(async () => {\n    const root = document.documentElement;\n    try {\n      if (!document.fullscreenElement) await root.requestFullscreen?.();\n    } catch { /* browser may block fullscreen until a direct gesture */ }\n    try {\n      const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> };\n      await orientation.lock?.("landscape");\n    } catch { /* orientation lock is not supported on every browser */ }\n  }, []);\n  const start = useCallback(() => { void enterImmersive(); world.start(); }, [enterImmersive, world]);\n  const toggleImmersive = useCallback(() => { void enterImmersive(); }, [enterImmersive]);
+  const enterImmersive = useCallback(async () => {
+    const root = document.documentElement;
+    try {
+      if (!document.fullscreenElement) await root.requestFullscreen?.();
+    } catch { /* browser may block fullscreen until a direct gesture */ }
+    try {
+      const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> };
+      await orientation.lock?.("landscape");
+    } catch { /* orientation lock is not supported on every browser */ }
+  }, []);
+  const start = useCallback(() => { void enterImmersive(); world.start(); }, [enterImmersive, world]);
+  const toggleImmersive = useCallback(() => { void enterImmersive(); }, [enterImmersive]);
   const playing = hud.phase === "playing";
   const showChrome = playing || hud.phase === "paused";
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col">
-      <div className="game-sheen" />\n      <div className="portrait-lock pointer-events-auto absolute inset-0 z-50 hidden items-center justify-center bg-bg/95 px-8 text-center">\n        <div className="max-w-sm">\n          <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-border bg-surface text-accent">↔</div>\n          <h2 className="font-display text-3xl text-fg">Putar perangkat</h2>\n          <p className="mt-3 text-sm leading-relaxed text-muted">Gunakan posisi mendatar agar arena terlihat penuh dan kontrol permainan lebih nyaman.</p>\n        </div>\n      </div>
+      <div className="game-sheen" />
+      <div className="portrait-lock pointer-events-auto absolute inset-0 z-50 hidden items-center justify-center bg-bg/95 px-8 text-center">
+        <div className="max-w-sm">
+          <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-border bg-surface text-accent">↔</div>
+          <h2 className="font-display text-3xl text-fg">Putar perangkat</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted">Gunakan posisi mendatar agar arena terlihat penuh dan kontrol permainan lebih nyaman.</p>
+        </div>
+      </div>
       <div className="game-vignette" style={{ opacity: 0.85 + hud.hurt * 0.4, boxShadow: hud.hurt > 0.2 ? "inset 0 0 80px rgb(196 92 74 / 0.35)" : undefined }} />
 
       {showChrome && (
@@ -134,7 +152,8 @@ export function Overlay({ world }: { world: World }) {
             <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.28em] text-accent uppercase"><span className="h-px w-8 bg-accent/60" />Arena Suryakerta</div>
             <h1 className="mt-4 font-display text-4xl leading-[0.92] tracking-tight text-fg md:text-6xl">Pendekar<br />Suryakerta</h1>
             <p className="mt-5 max-w-sm text-pretty text-sm leading-relaxed text-muted">Bertahan dari gelombang demi gelombang. Kuasai serangan, hindari tebasan musuh, lalu pilih peninggalan untuk membentuk gaya bertarungmu.</p>
-            <button type="button" onClick={start} className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-medium text-accent-fg transition-transform duration-150 hover:opacity-95 active:scale-[0.98]"><Swords className="size-4" />Mulai Bertarung</button>\n            <button type="button" onClick={toggleImmersive} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-medium text-fg transition-transform duration-150 hover:border-border-strong active:scale-[0.98]"><Maximize2 className="size-4" />Layar Penuh &amp; Mendatar</button>
+            <button type="button" onClick={start} className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-medium text-accent-fg transition-transform duration-150 hover:opacity-95 active:scale-[0.98]"><Swords className="size-4" />Mulai Bertarung</button>
+            <button type="button" onClick={toggleImmersive} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-medium text-fg transition-transform duration-150 hover:border-border-strong active:scale-[0.98]"><Maximize2 className="size-4" />Layar Penuh &amp; Mendatar</button>
             <div className="mt-6 rounded-2xl border border-white/8 bg-black/15 p-3"><p className="text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">Kendali</p></div>
             <dl className="mt-3 grid gap-2 text-xs text-subtle">
               <div className="flex justify-between gap-4"><dt>Gerak</dt><dd className="text-muted">WASD / stik kiri</dd></div>
