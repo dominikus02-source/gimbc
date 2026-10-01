@@ -9,7 +9,11 @@ const stoneDark = new THREE.MeshStandardMaterial({ color: "#383e47", roughness: 
 const steel = new THREE.MeshStandardMaterial({ color: "#8a919b", roughness: 0.38, metalness: 0.62 });
 const steelDark = new THREE.MeshStandardMaterial({ color: "#515963", roughness: 0.5, metalness: 0.45 });
 const ember = new THREE.MeshStandardMaterial({ color: "#c45c4a", emissive: "#c45c4a", emissiveIntensity: 1.4, roughness: 0.35 });
-const cloth = new THREE.MeshStandardMaterial({ color: "#353a42", roughness: 0.9, metalness: 0 });
+const cloth = new THREE.MeshStandardMaterial({ color: "#26313a", roughness: 0.82, metalness: 0 });
+const clothLight = new THREE.MeshStandardMaterial({ color: "#596878", roughness: 0.78, metalness: 0 });
+const leather = new THREE.MeshStandardMaterial({ color: "#241b18", roughness: 0.86, metalness: 0.04 });
+const bronze = new THREE.MeshStandardMaterial({ color: "#b18a4a", roughness: 0.38, metalness: 0.68 });
+const jade = new THREE.MeshStandardMaterial({ color: "#4f8d83", emissive: "#173c37", emissiveIntensity: 0.75, roughness: 0.28, metalness: 0.25 });
 const shadeMat = new THREE.MeshStandardMaterial({ color: "#1a2224", roughness: 0.55, metalness: 0.2, emissive: "#0d2a28", emissiveIntensity: 0.4 });
 const bruteMat = new THREE.MeshStandardMaterial({ color: "#59616b", roughness: 0.78, metalness: 0.15 });
 const wispMat = new THREE.MeshStandardMaterial({ color: "#6a9a94", emissive: "#6a9a94", emissiveIntensity: 1.6, roughness: 0.3, transparent: true, opacity: 0.92 });
@@ -142,18 +146,25 @@ function Knight({ world }: { world: World }) {
         <circleGeometry args={[0.55, 12]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.28} depthWrite={false} />
       </mesh>
-      <mesh geometry={capGeo} material={steel} position={[0, 0.85, 0]} castShadow />
-      <mesh geometry={boxGeo} material={steelDark} position={[0, 1.05, 0.02]} scale={[0.62, 0.42, 0.38]} castShadow />
-      <mesh geometry={boxGeo} material={steel} position={[-0.38, 1.18, 0]} scale={[0.22, 0.16, 0.32]} castShadow />
-      <mesh geometry={boxGeo} material={steel} position={[0.38, 1.18, 0]} scale={[0.22, 0.16, 0.32]} castShadow />
+      <mesh geometry={capGeo} material={leather} position={[0, 0.72, 0]} scale={[0.72, 0.82, 0.58]} castShadow />
+      <mesh geometry={capGeo} material={cloth} position={[0, 0.82, 0]} scale={[0.58, 0.72, 0.5]} castShadow />
+      <mesh geometry={capGeo} material={steel} position={[0, 0.92, 0]} scale={[0.5, 0.55, 0.46]} castShadow />
+      <mesh geometry={boxGeo} material={steelDark} position={[0, 1.08, 0.02]} scale={[0.68, 0.44, 0.42]} castShadow />
+      <mesh geometry={boxGeo} material={bronze} position={[0, 1.08, 0.23]} scale={[0.34, 0.16, 0.045]} />
+      <mesh geometry={boxGeo} material={steel} position={[-0.43, 1.2, 0]} scale={[0.25, 0.18, 0.34]} castShadow />
+      <mesh geometry={boxGeo} material={steel} position={[0.43, 1.2, 0]} scale={[0.25, 0.18, 0.34]} castShadow />
+      <mesh geometry={boxGeo} material={clothLight} position={[-0.43, 0.98, 0]} scale={[0.18, 0.3, 0.2]} />
+      <mesh geometry={boxGeo} material={clothLight} position={[0.43, 0.98, 0]} scale={[0.18, 0.3, 0.2]} />
       <mesh geometry={sphGeo} material={steel} position={[0, 1.52, 0]} scale={[0.24, 0.26, 0.24]} castShadow />
       <mesh geometry={boxGeo} material={steelDark} position={[0, 1.5, 0.16]} scale={[0.28, 0.12, 0.1]} />
-      <mesh ref={crystal} material={ember} position={[0, 1.08, 0.22]} scale={[0.09, 0.14, 0.07]} geometry={boxGeo} />
-      <mesh ref={cape} geometry={boxGeo} material={cloth} position={[0, 0.95, -0.28]} scale={[0.5, 0.85, 0.06]} />
+      <mesh geometry={boxGeo} material={leather} position={[0, 1.47, 0.22]} scale={[0.2, 0.035, 0.035]} />
+      <mesh ref={crystal} material={jade} position={[0, 1.08, 0.22]} scale={[0.1, 0.15, 0.07]} geometry={boxGeo} />
+      <mesh material={bronze} position={[0, 1.08, 0.27]} scale={[0.16, 0.035, 0.025]} geometry={boxGeo} />
+      <mesh ref={cape} geometry={boxGeo} material={cloth} position={[0, 0.95, -0.3]} scale={[0.56, 0.92, 0.06]} castShadow />
       <group ref={sword} position={[0.42, 0.92, 0.18]}>
         <mesh geometry={boxGeo} material={steelDark} scale={[0.08, 0.08, 0.22]} />
         <mesh geometry={boxGeo} material={steel} position={[0, 0.02, 0.55]} scale={[0.06, 0.025, 0.85]} />
-        <mesh material={ember} position={[0, 0.02, 0.22]} scale={[0.07, 0.07, 0.07]} geometry={sphGeo} />
+        <mesh material={bronze} position={[0, 0.02, 0.22]} scale={[0.07, 0.07, 0.07]} geometry={sphGeo} />
       </group>
     </group>
   );
@@ -498,19 +509,19 @@ export function GameCanvas({ world }: { world: World }) {
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ fov: 46, near: 0.12, far: 140, position: [0, 8, 14] }}
+      camera={{ fov: 44, near: 0.12, far: 140, position: [0, 7.4, 12.8] }}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.setClearColor("#080a0d");
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.42;
+        gl.toneMappingExposure = 1.22;
       }}
     >
       <SimLoop world={world} />
       <fog attach="fog" args={["#11151a", 18, 52]} />
       <hemisphereLight args={["#dbe4ea", "#3a302a", 0.82]} />
-      <ambientLight intensity={0.48} />
-      <directionalLight castShadow position={[14, 24, 10]} intensity={2.45} color="#d7dde8" shadow-mapSize={[1024, 1024]} shadow-camera-near={2} shadow-camera-far={70} shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} />
+      <ambientLight intensity={0.38} />
+      <directionalLight castShadow position={[14, 24, 10]} intensity={2.2} color="#c2ced6" shadow-mapSize={[1024, 1024]} shadow-camera-near={2} shadow-camera-far={70} shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} />
       <Stars radius={90} depth={40} count={900} factor={2.4} saturation={0.15} fade speed={0.3} />
       <Arena world={world} />
       <Knight world={world} />
