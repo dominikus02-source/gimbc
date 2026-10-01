@@ -1433,6 +1433,7 @@ export class World {
       maxStamina: p.maxStamina,
       souls: this.souls,
       wave: this.wave,
+      foes: this.spawnQ.length + this.enemies.reduce((n, e) => n + (e.alive ? 1 : 0), 0),
       combo: this.combo,
       banner: this.banner,
       skills: [
