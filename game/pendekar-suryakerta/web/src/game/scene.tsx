@@ -226,3 +226,305 @@ function EnemyView({ world, index }: { world: World; index: number }) {
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial color="#c45c4a" transparent opacity={0.95} depthWrite={false} />
       </mesh>
+      </mesh>
+      <group ref={shade}>
+        <mesh geometry={capGeo} material={shadeMat} position={[0, 0.7, 0]} scale={[0.85, 0.85, 0.85]} castShadow />
+        <mesh geometry={sphGeo} material={shadeMat} position={[0, 1.28, 0]} scale={[0.22, 0.22, 0.22]} />
+        <mesh material={ember} position={[-0.08, 1.3, 0.16]} scale={[0.04, 0.04, 0.04]} geometry={sphGeo} />
+        <mesh material={ember} position={[0.08, 1.3, 0.16]} scale={[0.04, 0.04, 0.04]} geometry={sphGeo} />
+      </group>
+      <group ref={brute}>
+        <mesh geometry={boxGeo} material={bruteMat} position={[0, 0.85, 0]} scale={[1.15, 1.5, 0.85]} castShadow />
+        <mesh geometry={boxGeo} material={steelDark} position={[0, 1.7, 0]} scale={[0.7, 0.45, 0.6]} />
+        <mesh geometry={boxGeo} material={bruteMat} position={[-0.7, 1.15, 0]} scale={[0.35, 0.9, 0.4]} />
+        <mesh geometry={boxGeo} material={bruteMat} position={[0.7, 1.15, 0]} scale={[0.35, 0.9, 0.4]} />
+      </group>
+      <group ref={wisp}>
+        <mesh geometry={sphGeo} material={wispMat} scale={[0.38, 0.38, 0.38]} />
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.52, 0.03, 6, 16]} />
+          <meshStandardMaterial color="#c5cdc8" emissive="#8aa8a4" emissiveIntensity={0.8} />
+        </mesh>
+        <pointLight color="#8ec4be" intensity={2.2} distance={4.5} />
+      </group>
+      <group ref={boss}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
+          <torusGeometry args={[1.45, 0.055, 8, 36]} />
+          <meshBasicMaterial color="#c45c4a" transparent opacity={0.55} depthWrite={false} />
+        </mesh>
+        <mesh geometry={capGeo} material={bossMat} position={[0, 1.35, 0]} scale={[1.6, 1.8, 1.6]} castShadow />
+        <mesh geometry={coneGeo} material={bossMat} position={[0, 2.55, 0]} scale={[2.4, 1.4, 2.4]} />
+        <mesh material={ember} position={[0, 1.7, 0.55]} scale={[0.18, 0.12, 0.08]} geometry={boxGeo} />
+        <mesh geometry={sphGeo} material={ember} position={[0, 2.15, 0.35]} scale={[0.16, 0.16, 0.16]} />
+        <pointLight color="#c45c4a" intensity={3.6} distance={5.5} />
+      </group>
+    </group>
+  );
+}
+
+function Pickups({ world }: { world: World }) {
+  const soul = useRef<THREE.InstancedMesh>(null);
+  const heart = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  useFrame(() => {
+    let s = 0;
+    let h = 0;
+    for (const u of world.pickups) {
+      if (!u.alive) continue;
+      dummy.position.set(u.x, u.y, u.z);
+      dummy.rotation.set(world.time * 2, u.t * 3, 0.4);
+      dummy.scale.setScalar(u.kind === "heart" ? 0.18 : 0.14);
+      dummy.updateMatrix();
+      const mesh = u.kind === "heart" ? heart.current : soul.current;
+      const idx = u.kind === "heart" ? h++ : s++;
+      mesh?.setMatrixAt(idx, dummy.matrix);
+    }
+    if (soul.current) {
+      soul.current.count = s;
+      soul.current.instanceMatrix.needsUpdate = true;
+    }
+    if (heart.current) {
+      heart.current.count = h;
+      heart.current.instanceMatrix.needsUpdate = true;
+    }
+  });
+  return (
+    <>
+      <instancedMesh ref={soul} args={[sphGeo, soulMat, 40]} frustumCulled={false} />
+      <instancedMesh ref={heart} args={[sphGeo, heartMat, 16]} frustumCulled={false} />
+    </>
+  );
+}
+
+function Projectiles({ world }: { world: World }) {
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  useFrame(() => {
+    let i = 0;
+    const m = mesh.current;
+    if (!m) return;
+    for (const p of world.projs) {
+      if (!p.alive) continue;
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.scale.setScalar(0.22);
+      dummy.updateMatrix();
+      m.setMatrixAt(i, dummy.matrix);
+      i++;
+    }
+    m.count = i;
+    m.instanceMatrix.needsUpdate = true;
+  });
+  return <instancedMesh ref={mesh} args={[sphGeo, projMat, 28]} frustumCulled={false} />;
+}
+
+function ProjectileTrails({ world }: { world: World }) {
+  const refs = useRef<(THREE.Mesh | null)[]>([]);
+  useFrame(() => {
+    for (let i = 0; i < 28; i++) {
+      const m = refs.current[i];
+      const p = world.projs[i];
+      if (!m || !p || !p.alive) {
+        if (m) m.visible = false;
+        continue;
+      }
+      const dx = p.x - p.px;
+      const dz = p.z - p.pz;
+      const len = Math.max(0.12, Math.hypot(dx, dz) * 1.9);
+      m.visible = true;
+      m.position.set((p.x + p.px) * 0.5, p.y, (p.z + p.pz) * 0.5);
+      m.scale.set(1, len, 1);
+      m.rotation.set(Math.PI / 2, Math.atan2(dx, dz), 0);
+      const mat = m.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.min(0.42, p.life * 0.22);
+    }
+  });
+  return (
+    <>
+      {Array.from({ length: 28 }, (_, i) => (
+        <mesh key={i} ref={(el) => { refs.current[i] = el; }} geometry={trailGeo} visible={false}>
+          <meshBasicMaterial color="#8ec4be" transparent opacity={0.25} depthWrite={false} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+function Particles({ world }: { world: World }) {
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const color = useMemo(() => new THREE.Color(), []);
+  useFrame(() => {
+    const m = mesh.current;
+    if (!m) return;
+    let i = 0;
+    for (const p of world.particles) {
+      if (!p.alive) continue;
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.scale.setScalar(p.size * (p.life / p.max));
+      dummy.updateMatrix();
+      m.setMatrixAt(i, dummy.matrix);
+      color.setRGB(p.r, p.g, p.b);
+      m.setColorAt(i, color);
+      i++;
+    }
+    m.count = i;
+    m.instanceMatrix.needsUpdate = true;
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  });
+  return <instancedMesh ref={mesh} args={[partGeo, partMat, 96]} frustumCulled={false} />;
+}
+
+function DamageNumbers({ world }: { world: World }) {
+  return (
+    <>
+      {world.floats.map((f, i) => {
+        if (!f.alive) return null;
+        return (
+          <Html key={i} position={[f.x, f.y, f.z]} center distanceFactor={8} style={{ pointerEvents: "none" }}>
+            <div className={f.crit ? "damage-number damage-number-crit" : "damage-number"} style={{ opacity: Math.min(1, f.life * 2.2), transform: `translateY(${(0.7 - f.life) * -12}px)` }}>
+              {f.crit ? "✦ " : ""}{f.text}
+            </div>
+          </Html>
+        );
+      })}
+    </>
+  );
+}
+
+function PerfectDodgeFx({ world }: { world: World }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const m = ref.current;
+    if (!m) return;
+    const active = world.perfectT > 0;
+    m.visible = active;
+    if (!active) return;
+    const k = 1 - world.perfectT / 0.22;
+    m.position.set(world.player.x, 0.12, world.player.z);
+    m.scale.setScalar(0.8 + k * 1.8);
+    const mat = m.material as THREE.MeshBasicMaterial;
+    mat.opacity = (1 - k) * 0.85;
+  });
+  return (
+    <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+      <ringGeometry args={[0.46, 0.58, 40]} />
+      <meshBasicMaterial color="#d6eee9" transparent opacity={0.85} depthWrite={false} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function ShockwaveFx({ world }: { world: World }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const m = ref.current;
+    if (!m) return;
+    const active = world.shockT > 0;
+    m.visible = active;
+    if (!active) return;
+    const progress = 1 - world.shockT / 0.42;
+    const scale = 0.45 + progress * (world.shockMax / 0.78);
+    m.position.set(world.shockX, 0.075, world.shockZ);
+    m.scale.setScalar(scale);
+    const mat = m.material as THREE.MeshBasicMaterial;
+    mat.opacity = Math.max(0, (1 - progress) * 0.6);
+  });
+  return (
+    <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} geometry={shockGeo} visible={false}>
+      <meshBasicMaterial color="#c5cdc8" transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} />
+    </mesh>
+  );
+}
+
+function SlashFx({ world }: { world: World }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const m = ref.current;
+    if (!m) return;
+    const on = world.slashT > 0 && world.phase === "playing";
+    m.visible = on;
+    if (!on) return;
+    const p = world.player;
+    const fx = -Math.sin(world.slashYaw);
+    const fz = -Math.cos(world.slashYaw);
+    m.position.set(p.x + fx * 1.1, 0.95, p.z + fz * 1.1);
+    m.rotation.set(-Math.PI / 2, 0, world.slashYaw);
+    const mat = m.material as THREE.MeshBasicMaterial;
+    const progress = Math.max(0, Math.min(1, world.slashT / world.slashDur));
+    mat.opacity = progress * 0.55;
+    const stepScale = world.player.attackStep === 2 ? 1.18 : world.player.attackStep === 1 ? 1.07 : 1;
+    m.scale.setScalar(1.7 * stepScale);
+  });
+  return <mesh ref={ref} geometry={slashGeo} material={slashMat} scale={[1.7, 1.7, 1.7]} visible={false} />;
+}
+
+function Telegraphs({ world }: { world: World }) {
+  const refs = useRef<(THREE.Mesh | null)[]>([]);
+  useFrame(() => {
+    for (let i = 0; i < 8; i++) {
+      const mesh = refs.current[i];
+      const t = world.telegraphs[i];
+      if (!mesh) continue;
+      if (!t) {
+        mesh.visible = false;
+        continue;
+      }
+      mesh.visible = true;
+      mesh.position.set(t.x, 0.06, t.z);
+      const k = 1 - t.t / t.max;
+      const mat = mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.12 + k * 0.38;
+      mat.color.set(t.tone === "emas" ? "#e0a84a" : t.tone === "biru" ? "#6aa8b5" : "#c45c4a");
+      if (t.kind === "cone") {
+        mesh.geometry = coneTeleGeo;
+        mesh.rotation.set(-Math.PI / 2, 0, (t.yaw ?? 0));
+        mesh.scale.set(t.r, t.r * (t.width ?? 0.72), t.r);
+      } else {
+        mesh.geometry = ringGeo;
+        mesh.rotation.set(-Math.PI / 2, 0, 0);
+        mesh.scale.set(t.r, t.r, t.r);
+      }
+    }
+  });
+  return (
+    <>
+      {Array.from({ length: 8 }, (_, i) => (
+        <mesh key={i} ref={(el) => { refs.current[i] = el; }} rotation={[-Math.PI / 2, 0, 0]} geometry={ringGeo} material={teleMat.clone()} visible={false} />
+      ))}
+    </>
+  );
+}
+
+export function GameCanvas({ world }: { world: World }) {
+  return (
+    <Canvas
+      shadows
+      dpr={[1, 1.75]}
+      camera={{ fov: 46, near: 0.12, far: 140, position: [0, 8, 14] }}
+      gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+      onCreated={({ gl }) => {
+        gl.setClearColor("#080a0d");
+        gl.toneMapping = THREE.ACESFilmicToneMapping;
+        gl.toneMappingExposure = 1.42;
+      }}
+    >
+      <SimLoop world={world} />
+      <fog attach="fog" args={["#11151a", 18, 52]} />
+      <hemisphereLight args={["#dbe4ea", "#3a302a", 0.82]} />
+      <ambientLight intensity={0.48} />
+      <directionalLight castShadow position={[14, 24, 10]} intensity={2.45} color="#d7dde8" shadow-mapSize={[1024, 1024]} shadow-camera-near={2} shadow-camera-far={70} shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} />
+      <Stars radius={90} depth={40} count={900} factor={2.4} saturation={0.15} fade speed={0.3} />
+      <Arena world={world} />
+      <Knight world={world} />
+      <Enemies world={world} />
+      <Pickups world={world} />
+      <Projectiles world={world} />
+      <ProjectileTrails world={world} />
+      <Particles world={world} />
+      <SlashFx world={world} />
+      <PerfectDodgeFx world={world} />
+      <ShockwaveFx world={world} />
+      <DamageNumbers world={world} />
+      <Telegraphs world={world} />
+    </Canvas>
+  );
+}
