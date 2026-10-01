@@ -1015,3 +1015,487 @@ export class World {
   }
 
   private hitPlayer(dmg: number, dx: number, dz: number) {
+    const p = this.player;
+    if (this.phase !== "playing") return;
+    if (p.invuln > 0) {
+      if (p.dodgeT > 0 && this.perfectT <= 0) {
+        this.perfectT = 0.22;
+        p.stamina = Math.min(p.maxStamina, p.stamina + 10);
+        this.combo = Math.min(99, this.combo + 1);
+        this.comboT = 1.6;
+        this.hitPulse = Math.min(1, this.hitPulse + 0.45);
+        this.addTrauma(0.12);
+        this.burst(p.x, 0.7, p.z, 14, 0.55, 0.8, 0.72, 1.7);
+        sfxPlay.dash();
+      }
+      return;
+    }
+    const dealt = dmg * this.mods.taken;
+    this.waveDamageTaken += dealt;
+    p.hp -= dealt;
+    p.flash = 0.16;
+    p.invuln = 0.22;
+    this.hurt = 1;
+    this.hitPulse = Math.min(1, this.hitPulse + 0.55);
+    this.addTrauma(0.32);
+    sfxPlay.hurt();
+    const n = Math.hypot(dx, dz) || 1;
+    this.moveEntity(p, (dx / n) * 0.55, (dz / n) * 0.55);
+    if (this.mods.thorns > 0) {
+      for (const e of this.enemies) {
+        if (!e.alive) continue;
+        if (Math.hypot(e.x - p.x, e.z - p.z) < 2.2) this.hurtEnemy(e, dealt * this.mods.thorns, false);
+      }
+    }
+    if (p.hp <= 0) {
+      p.hp = 0;
+      this.die();
+    }
+  }
+
+  private hurtEnemy(e: Enemy, raw: number, canCrit: boolean) {
+    let dmg = raw;
+    let crit = false;
+    if (canCrit && this.rand() < this.mods.crit) {
+      dmg *= 2;
+      crit = true;
+      sfxPlay.crit();
+    } else {
+      sfxPlay.hit();
+    }
+    const momentum = 1 + Math.min(this.combo, 12) * 0.015;
+    dmg *= Math.min(1 + this.comboDamageCap, momentum);
+    e.hp -= dmg;
+    e.flash = 0.12;
+    this.combo = Math.min(99, this.combo + 1);
+    this.comboT = 1.6;
+    this.floatDmg(e.x, e.kind === "boss" ? 2.4 : 1.4, e.z, Math.round(dmg), crit);
+    const p = this.player;
+    const nx = e.x - p.x;
+    const nz = e.z - p.z;
+    const n = Math.hypot(nx, nz) || 1;
+    e.x += (nx / n) * 0.28;
+    e.z += (nz / n) * 0.28;
+    if (this.mods.lifesteal > 0) p.hp = Math.min(p.maxHp, p.hp + dmg * this.mods.lifesteal);
+    this.addTrauma(e.kind === "boss" ? 0.22 : 0.1);
+    this.hitstop = Math.max(this.hitstop, crit ? 0.07 : 0.04);
+    this.hitPulse = Math.min(1, this.hitPulse + (crit ? 0.48 : 0.28));
+    const hitDx = e.x - p.x;
+    const hitDz = e.z - p.z;
+    const hitLen = Math.hypot(hitDx, hitDz) || 1;
+    this.burst(e.x, 0.9, e.z, crit ? 12 : 7, crit ? 1 : 0.9, crit ? 0.72 : 0.5, crit ? 0.25 : 0.35, crit ? 1.5 : 0.9);
+    this.burst(e.x + (hitDx / hitLen) * 0.18, 1.0, e.z + (hitDz / hitLen) * 0.18, crit ? 5 : 3, 0.95, 0.95, 0.88, 1.8);
+    if (e.hp <= 0) this.killEnemy(e);
+  }
+
+  private killEnemy(e: Enemy) {
+    e.alive = false;
+    this.kills += 1;
+    const souls = e.kind === "boss" ? 40 : e.kind === "brute" ? 12 : e.kind === "wisp" ? 8 : 5;
+    this.drop("soul", e.x, e.z, souls + this.wave);
+    if (this.rand() < 0.12) this.drop("heart", e.x + 0.4, e.z, 18);
+    this.hitPulse = Math.min(1, this.hitPulse + (e.kind === "boss" ? 0.5 : 0.18));
+    this.burst(e.x, 0.8, e.z, e.kind === "boss" ? 36 : 18, 0.35, 0.4, 0.42, 1.3);
+    sfxPlay.death();
+    if (e.kind === "boss") this.addTrauma(0.7);
+  }
+
+  private die() {
+    this.phase = "dead";
+    this.save = recordRun(this.souls, this.wave);
+    this.banner = "Dikalahkan";
+    this.combo = 0;
+    this.bannerT = 3;
+    sfxPlay.death();
+    this.burst(this.player.x, 0.8, this.player.z, 24, 0.8, 0.35, 0.3, 1.4);
+    this.publish(true);
+  }
+
+  private drop(kind: "soul" | "heart", x: number, z: number, val: number) {
+    const u = this.pickups.find((p) => !p.alive);
+    if (!u) return;
+    u.alive = true;
+    u.kind = kind;
+    u.x = x;
+    u.z = z;
+    u.y = 0.6;
+    u.vy = 0;
+    u.val = val;
+    u.t = 0;
+  }
+
+  private spawnEnemy(kind: Kind) {
+    const e = this.enemies.find((x) => !x.alive);
+    if (!e) return;
+    const pos = this.spawnPos();
+    const stats = this.kindStats(kind);
+    e.alive = true;
+    e.kind = kind;
+    e.x = pos.x;
+    e.z = pos.z;
+    e.y = kind === "wisp" ? 1.1 : 0;
+    e.yaw = 0;
+    e.hp = stats.hp;
+    e.maxHp = stats.hp;
+    e.r = stats.r;
+    e.speed = stats.speed;
+    e.dmg = stats.dmg;
+    e.cd = 0.4;
+    e.wind = 0;
+    e.stun = 0;
+    e.flash = 0;
+    e.state = 0;
+    e.stateT = 1.2;
+    e.hitId = 0;
+    e.rage = 0;
+    e.chargeX = this.player.x;
+    e.chargeZ = this.player.z;
+    this.burst(e.x, 0.4, e.z, 8, 0.3, 0.4, 0.42, 0.8);
+  }
+
+  private kindStats(kind: Kind) {
+    const early = Math.min(Math.max(this.wave - 1, 0), 12) * 0.09;
+    const late = Math.max(0, this.wave - 13) * 0.045;
+    const s = 1 + early + late;
+    if (kind === "shade") return { hp: 28 * s, r: 0.46, speed: 5.1, dmg: 8 + this.wave * 0.4 };
+    if (kind === "brute") return { hp: 95 * s, r: 0.78, speed: 3.05, dmg: 16 + this.wave * 0.6 };
+    if (kind === "wisp") return { hp: 22 * s, r: 0.38, speed: 4.3, dmg: 9 };
+    return { hp: (260 + this.wave * 24) * s, r: 1.05, speed: 3.4, dmg: 20 + this.wave };
+  }
+
+  private spawnPos() {
+    for (let i = 0; i < 12; i++) {
+      const a = this.rand() * Math.PI * 2;
+      const r = 11 + this.rand() * 8;
+      const x = Math.sin(a) * r;
+      const z = Math.cos(a) * r;
+      if (Math.hypot(x - this.player.x, z - this.player.z) < 7) continue;
+      if (this.hitPillar(x, z, 1.2)) continue;
+      return { x, z };
+    }
+    return { x: 0, z: -16 };
+  }
+
+  private moveEntity(ent: { x: number; z: number; r: number }, dx: number, dz: number) {
+    ent.x += dx;
+    ent.z += dz;
+    this.constrain(ent);
+  }
+
+  private constrain(ent: { x: number; z: number; r: number }) {
+    const d = Math.hypot(ent.x, ent.z);
+    const max = ARENA - ent.r - 0.35;
+    if (d > max) {
+      ent.x *= max / d;
+      ent.z *= max / d;
+    }
+    for (const p of this.pillars) {
+      const dx = ent.x - p.x;
+      const dz = ent.z - p.z;
+      const dist = Math.hypot(dx, dz);
+      const min = p.r + ent.r;
+      if (dist < min && dist > 0.0001) {
+        const k = min / dist;
+        ent.x = p.x + dx * k;
+        ent.z = p.z + dz * k;
+      }
+    }
+  }
+
+  private hitPillar(x: number, z: number, r: number) {
+    for (const p of this.pillars) {
+      if (Math.hypot(x - p.x, z - p.z) < p.r + r) return true;
+    }
+    return false;
+  }
+
+  private tickVfx(dt: number) {
+    for (const p of this.particles) {
+      if (!p.alive) continue;
+      p.life -= dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.z += p.vz * dt;
+      p.vy -= 4.5 * dt;
+      if (p.life <= 0 || p.y < 0) p.alive = false;
+    }
+    for (const f of this.floats) {
+      if (!f.alive) continue;
+      f.life -= dt;
+      f.y += dt * 1.3;
+      if (f.life <= 0) f.alive = false;
+    }
+    for (let i = this.telegraphs.length - 1; i >= 0; i--) {
+      const t = this.telegraphs[i]!;
+      t.t -= dt;
+      if (t.t <= 0) this.telegraphs.splice(i, 1);
+    }
+  }
+
+  private burst(x: number, y: number, z: number, n: number, r: number, g: number, b: number, force: number) {
+    let left = n;
+    for (const p of this.particles) {
+      if (left <= 0) break;
+      if (p.alive) continue;
+      p.alive = true;
+      p.x = x;
+      p.y = y;
+      p.z = z;
+      const a = this.rand() * Math.PI * 2;
+      const f = 1.5 + this.rand() * force;
+      p.vx = Math.cos(a) * f;
+      p.vz = Math.sin(a) * f;
+      p.vy = 1.2 + this.rand() * 2.2;
+      p.life = 0.35 + this.rand() * 0.4;
+      p.max = p.life;
+      p.size = 0.08 + this.rand() * 0.12;
+      p.r = r;
+      p.g = g;
+      p.b = b;
+      left--;
+    }
+  }
+
+  private floatDmg(x: number, y: number, z: number, n: number, crit: boolean) {
+    const f = this.floats.find((d) => !d.alive);
+    if (!f) return;
+    f.alive = true;
+    f.x = x;
+    f.y = y;
+    f.z = z;
+    f.text = String(n);
+    f.life = 0.7;
+    f.crit = crit;
+  }
+
+  private addTrauma(v: number) {
+    if (this.reducedMotion) return;
+    this.trauma = clamp(this.trauma + v, 0, 1);
+  }
+
+  private syncCamera(dt: number) {
+    const p = this.player;
+    if (this.phase === "title") {
+      const t = this.time * 0.22;
+      const dist = 15.5;
+      this.camera.x = Math.sin(t) * dist;
+      this.camera.y = 7.4;
+      this.camera.z = Math.cos(t) * dist;
+      this.camera.lx = 0;
+      this.camera.ly = 1.05;
+      this.camera.lz = 0;
+      return;
+    }
+    const fx = -Math.sin(p.yaw);
+    const fz = -Math.cos(p.yaw);
+    const follow = 11.2;
+    const height = 6.4;
+    const tx = p.x - fx * follow;
+    const ty = p.y + height;
+    const tz = p.z - fz * follow;
+    const k = 1 - Math.exp(-5.2 * dt);
+    this.camera.x += (tx - this.camera.x) * k;
+    this.camera.y += (ty - this.camera.y) * k;
+    this.camera.z += (tz - this.camera.z) * k;
+    this.camera.lx += (p.x - this.camera.lx) * k;
+    this.camera.ly += (p.y + 1.15 - this.camera.ly) * k;
+    this.camera.lz += (p.z - this.camera.lz) * k;
+    const shake = this.trauma * this.trauma;
+    if (shake > 0.002) {
+      const t = this.time * 29;
+      this.camera.x += Math.sin(t * 1.7) * shake * 0.38;
+      this.camera.y += Math.cos(t * 2.1) * shake * 0.22;
+      this.camera.z += Math.sin(t * 1.3) * shake * 0.38;
+    }
+  }
+
+  getCameraFov() {
+    const bossAlive = this.enemies.some((e) => e.alive && e.kind === "boss");
+    const bossZoom = bossAlive ? -1.4 : 0;
+    const punch = this.hitPulse * 1.8 + (this.slashT > 0 ? 1.2 : 0);
+    return 46 + bossZoom + punch;
+  }
+
+  private applyRelic(relic: Relic) {
+    this.owned.add(relic.id);
+    const p = this.player;
+    switch (relic.id) {
+      case "ember-edge":
+        this.mods.dmg += 0.25;
+        break;
+      case "iron-veil":
+        p.maxHp += 40;
+        p.hp = p.maxHp;
+        break;
+      case "windstep":
+        this.mods.speed += 0.18;
+        break;
+      case "blood-price":
+        this.mods.lifesteal += 0.12;
+        break;
+      case "soul-magnet":
+        this.mods.magnet += 3.5;
+        break;
+      case "second-skin":
+        this.mods.taken *= 0.82;
+        break;
+      case "frenzy":
+        this.mods.atkSpd += 0.2;
+        break;
+      case "cinder-wake":
+        this.mods.wake = true;
+        break;
+      case "aftershock":
+        this.mods.shock = true;
+        break;
+      case "crit-mark":
+        this.mods.crit += 0.2;
+        break;
+      case "deep-lungs":
+        p.maxStamina += 35;
+        p.stamina = p.maxStamina;
+        this.mods.staminaRegen += 0.35;
+        break;
+      case "thorn-oath":
+        this.mods.thorns += 0.2;
+        break;
+      case "surge-hp":
+        p.hp = p.maxHp;
+        this.souls += 40;
+        break;
+      case "surge-dmg":
+        this.mods.dmg += 0.08;
+        break;
+      case "surge-spd":
+        this.mods.speed += 0.08;
+        break;
+    }
+  }
+
+  private buildArena() {
+    const spots: Pillar[] = [
+      { x: 6.5, z: 5.5, r: 0.85, h: 3.4 },
+      { x: -7.2, z: 4.2, r: 0.95, h: 4.1 },
+      { x: 8.1, z: -6.4, r: 0.78, h: 2.8 },
+      { x: -5.4, z: -8.2, r: 1.05, h: 3.8 },
+      { x: 0.8, z: -11.5, r: 0.7, h: 2.4 },
+      { x: -12.2, z: 1.6, r: 0.88, h: 3.2 },
+      { x: 12.6, z: 2.8, r: 0.8, h: 2.9 },
+      { x: 3.2, z: 11.4, r: 0.72, h: 2.2 },
+    ];
+    this.pillars = spots;
+  }
+
+  private rand() {
+    this.seed = (this.seed * 16807) % 2147483647;
+    return (this.seed - 1) / 2147483646;
+  }
+
+  private mkEnemy(): Enemy {
+    return {
+      alive: false,
+      kind: "shade",
+      x: 0,
+      z: 0,
+      y: 0,
+      yaw: 0,
+      hp: 1,
+      maxHp: 1,
+      r: 0.4,
+      speed: 4,
+      dmg: 8,
+      cd: 0,
+      wind: 0,
+      stun: 0,
+      flash: 0,
+      state: 0,
+      stateT: 0,
+      hitId: 0,
+      rage: 0,
+      chargeX: 0,
+      chargeZ: 0,
+    };
+  }
+  private mkProj(): Proj {
+    return { alive: false, x: 0, z: 0, px: 0, pz: 0, y: 1, vx: 0, vz: 0, life: 0, dmg: 0, r: 0.25 };
+  }
+  private mkPick(): Pickup {
+    return { alive: false, x: 0, z: 0, y: 0.5, vy: 0, kind: "soul", val: 0, t: 0 };
+  }
+  private mkPart(): Particle {
+    return {
+      alive: false,
+      x: 0,
+      y: 0,
+      z: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      life: 0,
+      max: 1,
+      size: 0.1,
+      r: 1,
+      g: 1,
+      b: 1,
+    };
+  }
+  private mkFloat(): DmgFloat {
+    return { alive: false, x: 0, y: 0, z: 0, text: "", life: 0, crit: false };
+  }
+
+  snapshot(): HudState {
+    const p = this.player;
+    const boss = this.enemies.find((e) => e.alive && e.kind === "boss");
+    return {
+      phase: this.phase,
+      hp: p.hp,
+      maxHp: p.maxHp,
+      bossHp: boss?.hp ?? 0,
+      bossMaxHp: boss?.maxHp ?? 0,
+      bossRage: boss?.rage ?? 0,
+      stamina: p.stamina,
+      maxStamina: p.maxStamina,
+      souls: this.souls,
+      wave: this.wave,
+      combo: this.combo,
+      banner: this.banner,
+      skills: [
+        { id: "nova", name: "Jurus", ready: 1 - p.novaCd / 8, hotkey: "Q" },
+        { id: "snare", name: "Jerat", ready: 1 - p.snareCd / 7, hotkey: "E" },
+        { id: "rend", name: "Tebas", ready: 1 - p.rendCd / 5.5, hotkey: "F" },
+      ],
+      choices: this.choices,
+      kills: this.kills,
+      runTime: this.runTime,
+      bestSouls: this.save.bestSouls,
+      bestWave: this.save.bestWave,
+      muted: isMuted(),
+      hurt: this.hurt,
+      xp: this.xp,
+      xpNext: this.xpNext,
+      level: this.level,
+    };
+  }
+
+  private maybePublish(dt: number) {
+    this.pubAcc += dt;
+    if (this.pubAcc > 0.05) {
+      this.pubAcc = 0;
+      this.publish(false);
+    }
+  }
+
+  publish(_force: boolean) {
+    useHud.setState(this.snapshot());
+  }
+}
+
+declare global {
+  interface Window {
+    __controlsTest?: {
+      getYaw: () => number;
+      getSpeed: () => number;
+      setKeys: (codes: string[]) => void;
+    };
+  }
+}
