@@ -21,6 +21,7 @@ export type HudState = {
   maxStamina: number;
   souls: number;
   wave: number;
+  foes: number;
   combo: number;
   banner: string | null;
   skills: SkillHud[];
@@ -47,6 +48,7 @@ export const initialHud: HudState = {
   maxStamina: 100,
   souls: 0,
   wave: 0,
+  foes: 0,
   combo: 0,
   banner: null,
   skills: [
