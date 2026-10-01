@@ -123,3 +123,65 @@ export function Overlay({ world }: { world: World }) {
           <div className="pointer-events-auto hidden md:block"><button type="button" className="game-chip rounded-xl p-2 text-muted" onClick={() => world.toggleMute()} aria-label={hud.muted ? "Nyalakan suara" : "Matikan suara"}>{hud.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}</button></div>
         </footer>
       )}
+      {hud.phase === "title" && (
+        <div className="pointer-events-auto absolute inset-0 flex items-center justify-center bg-bg/35 px-6">
+          <div className="game-panel w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[28px] p-6 shadow-[0_24px_80px_rgb(0_0_0_/_0.45)] md:p-8">
+            <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.28em] text-accent uppercase"><span className="h-px w-8 bg-accent/60" />Arena Suryakerta</div>
+            <h1 className="mt-4 font-display text-4xl leading-[0.92] tracking-tight text-fg md:text-6xl">Pendekar<br />Suryakerta</h1>
+            <p className="mt-5 max-w-sm text-pretty text-sm leading-relaxed text-muted">Bertahan dari gelombang demi gelombang. Kuasai serangan, hindari tebasan musuh, lalu pilih peninggalan untuk membentuk gaya bertarungmu.</p>
+            <button type="button" onClick={start} className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-medium text-accent-fg transition-transform duration-150 hover:opacity-95 active:scale-[0.98]"><Swords className="size-4" />Mulai Bertarung</button>
+            <div className="mt-6 rounded-2xl border border-white/8 bg-black/15 p-3"><p className="text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">Kendali</p></div>
+            <dl className="mt-3 grid gap-2 text-xs text-subtle">
+              <div className="flex justify-between gap-4"><dt>Gerak</dt><dd className="text-muted">WASD / stik kiri</dd></div>
+              <div className="flex justify-between gap-4"><dt>Serang</dt><dd className="text-muted">Spasi atau klik</dd></div>
+              <div className="flex justify-between gap-4"><dt>Lari Cepat</dt><dd className="text-muted">Shift</dd></div>
+              <div className="flex justify-between gap-4"><dt>Jurus</dt><dd className="text-muted">Q jurus · E jerat · F tebas</dd></div>
+            </dl>
+            {hud.bestSouls > 0 && <p className="mt-5 text-xs text-muted tabular-nums">Terbaik · gelombang {hud.bestWave} · {hud.bestSouls} jiwa</p>}
+          </div>
+        </div>
+      )}
+
+      {hud.phase === "pick" && hud.choices && (
+        <div className="pointer-events-auto absolute inset-0 flex items-center justify-center bg-bg/50 px-4">
+          <div className="game-panel w-full max-w-3xl rounded-[28px] p-6 md:p-8">
+            <p className="text-[11px] font-medium tracking-[0.24em] text-muted uppercase">Peninggalan menawarkan hadiah</p>
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-fg">Pilih peninggalan</h2>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {hud.choices.map((c) => <button key={c.id} type="button" onClick={() => world.choose(c.id)} className="rounded-xl border border-border bg-raised p-4 text-left transition-transform duration-150 hover:border-border-strong active:scale-[0.99]"><p className="font-medium text-fg">{c.name}</p><p className="mt-2 text-sm leading-relaxed text-muted">{c.desc}</p></button>)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {hud.phase === "paused" && (
+        <div className="pointer-events-auto absolute inset-0 flex items-center justify-center bg-bg/55 px-6">
+          <div className="game-panel w-full max-w-sm rounded-[28px] p-8">
+            <h2 className="font-display text-3xl tracking-tight">Jeda</h2>
+            <div className="mt-6 flex flex-col gap-2">
+              <button type="button" className="flex h-12 items-center justify-center gap-2 rounded-lg bg-accent font-medium text-accent-fg" onClick={() => { world.phase = "playing"; world.publish(true); }}><Play className="size-4" />Lanjutkan</button>
+              <button type="button" className="flex h-12 items-center justify-center gap-2 rounded-lg border border-border text-fg" onClick={() => world.toggleMute()}>{hud.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}{hud.muted ? "Nyalakan suara" : "Matikan suara"}</button>
+              <button type="button" className="flex h-12 items-center justify-center gap-2 rounded-lg border border-border text-fg" onClick={() => world.restart()}><RotateCcw className="size-4" />Mulai Ulang</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {hud.phase === "dead" && (
+        <div className="pointer-events-auto absolute inset-0 flex items-center justify-center bg-bg/60 px-6">
+          <div className="game-panel w-full max-w-md rounded-[28px] p-8">
+            <p className="text-[11px] font-medium tracking-[0.24em] text-muted uppercase">Pertarungan berakhir</p>
+            <h2 className="mt-2 font-display text-4xl tracking-tight">Tumbang</h2>
+            <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
+              <div><dt className="text-subtle">Gelombang</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.wave}</dd></div>
+              <div><dt className="text-subtle">Jiwa</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.souls}</dd></div>
+              <div><dt className="text-subtle">Dikalahkan</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.kills}</dd></div>
+              <div><dt className="text-subtle">Terbaik</dt><dd className="mt-1 font-display text-2xl tabular-nums">{hud.bestSouls}</dd></div>
+            </dl>
+            <button type="button" onClick={() => world.restart()} className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent font-medium text-accent-fg"><Swords className="size-4" />Bertarung Lagi</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
