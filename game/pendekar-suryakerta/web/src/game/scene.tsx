@@ -506,33 +506,52 @@ function Telegraphs({ world }: { world: World }) {
 
 
 function WorldDressing() {
-  // World berada di perimeter agar memperkaya suasana tanpa menutup pertarungan.
   const trees = [
     [-15, -12, 0.72], [-10, -15, 0.62], [0, -16, 0.7], [10, -15, 0.64], [15, -12, 0.72],
     [-17, -4, 0.68], [17, -3, 0.7], [-18, 6, 0.62], [18, 7, 0.68],
-    [-13, 13, 0.62], [0, 16, 0.7], [13, 13, 0.64]
+    [-13, 13, 0.62], [0, 16, 0.7], [13, 13, 0.64],
+  ] as const;
+
+  const rocks = [
+    [-12, -9, 0.9], [12, -10, 0.75], [-16, 2, 0.7], [16, 4, 0.8],
+    [-11, 11, 0.65], [11, 12, 0.7],
+  ] as const;
+
+  const lanterns = [
+    [-10.5, -12.5], [10.5, -12.5], [-15.5, 5.5], [15.5, 6],
   ] as const;
 
   return (
     <group>
       {trees.map(([x, z, s], i) => (
         <group key={i} position={[x, 0.05, z]} scale={s} frustumCulled={false}>
-          <mesh position={[0, 1.5, 0]} castShadow>
-            <cylinderGeometry args={[0.24, 0.34, 3.0, 8]} />
-            <meshBasicMaterial color="#4a3022" />
+          <mesh position={[0, 1.45, 0]} castShadow>
+            <cylinderGeometry args={[0.18, 0.3, 2.9, 7]} />
+            <meshStandardMaterial color="#4a3022" roughness={0.92} />
           </mesh>
-          <mesh position={[0, 3.35, 0]} castShadow>
-            <coneGeometry args={[1.8, 3.5, 10]} />
-            <meshBasicMaterial color="#1f5141" />
+          <mesh position={[-0.42, 2.8, 0]} rotation={[0, 0, -0.08]} castShadow>
+            <coneGeometry args={[1.35, 2.5, 9]} />
+            <meshStandardMaterial color="#173e33" roughness={0.9} />
           </mesh>
-          <mesh position={[0.2, 4.35, -0.05]} castShadow>
-            <coneGeometry args={[1.12, 2.2, 10]} />
-            <meshBasicMaterial color="#37735c" />
+          <mesh position={[0.38, 3.35, -0.04]} rotation={[0, 0, 0.08]} castShadow>
+            <coneGeometry args={[1.18, 2.35, 9]} />
+            <meshStandardMaterial color="#245849" roughness={0.88} />
+          </mesh>
+          <mesh position={[0, 4.05, 0.02]} castShadow>
+            <coneGeometry args={[0.82, 1.7, 9]} />
+            <meshStandardMaterial color="#34705a" roughness={0.84} />
           </mesh>
         </group>
       ))}
 
-      <group position={[0, 0, -15]} scale={0.72}>
+      {rocks.map(([x, z, s], i) => (
+        <mesh key={`rock-${i}`} position={[x, 0.18, z]} scale={s} rotation={[0.08, i * 0.7, -0.05]} castShadow>
+          <icosahedronGeometry args={[0.75, 1]} />
+          <meshStandardMaterial color="#4b514d" roughness={0.96} />
+        </mesh>
+      ))}
+
+      <group position={[0, 0, -15]} scale={0.56}>
         <mesh position={[-3.1, 3.1, 0]} castShadow>
           <cylinderGeometry args={[0.5, 0.7, 6.2, 8]} />
           <meshStandardMaterial color="#4a3424" roughness={0.9} />
@@ -551,44 +570,44 @@ function WorldDressing() {
         </mesh>
         <mesh position={[0, 5.4, 0.04]}>
           <boxGeometry args={[2.7, 0.7, 0.12]} />
-          <meshStandardMaterial color="#a77b42" roughness={0.7} />
+          <meshStandardMaterial color="#a77b42" roughness={0.7} metalness={0.08} />
         </mesh>
       </group>
 
-      <group position={[0, 0, -13]} scale={0.62}>
-        <mesh position={[-4.2, 3.5, 0]} castShadow>
-          <cylinderGeometry args={[0.6, 0.78, 7, 8]} />
-          <meshBasicMaterial color="#573522" />
-        </mesh>
-        <mesh position={[4.2, 3.5, 0]} castShadow>
-          <cylinderGeometry args={[0.6, 0.78, 7, 8]} />
-          <meshBasicMaterial color="#573522" />
-        </mesh>
-        <mesh position={[0, 7.0, 0]} castShadow>
-          <boxGeometry args={[10, 0.9, 1.0]} />
-          <meshBasicMaterial color="#b47a38" />
-        </mesh>
-        <mesh position={[0, 5.65, 0]} castShadow>
-          <boxGeometry args={[7.0, 0.35, 0.8]} />
-          <meshBasicMaterial color="#7b4d28" />
-        </mesh>
-      </group>
+      {lanterns.map(([x, z], i) => (
+        <group key={`lantern-${i}`} position={[x, 0, z]}>
+          <mesh position={[0, 1.25, 0]} castShadow>
+            <cylinderGeometry args={[0.08, 0.11, 2.5, 6]} />
+            <meshStandardMaterial color="#3a2921" roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 2.45, 0]} castShadow>
+            <cylinderGeometry args={[0.34, 0.28, 0.48, 8]} />
+            <meshStandardMaterial
+              color="#7b4a25"
+              emissive="#d58b42"
+              emissiveIntensity={0.8}
+              roughness={0.65}
+            />
+          </mesh>
+          <pointLight color="#d89a58" intensity={0.9} distance={6} position={[0, 2.45, 0]} />
+        </group>
+      ))}
 
-      <group position={[0, 0, 15]} scale={0.8}>
+      <group position={[0, 0, 15]} scale={0.72}>
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <boxGeometry args={[7.5, 5.5, 0.35]} />
-          <meshStandardMaterial color="#6d6252" roughness={0.95} />
+          <meshStandardMaterial color="#5e5b52" roughness={0.96} />
         </mesh>
         {[-2.6, -1.3, 0, 1.3, 2.6].map((x) => (
           <mesh key={x} position={[x, 0.2, 0]}>
-            <boxGeometry args={[0.16, 0.35, 5.6]} />
-            <meshStandardMaterial color="#b08a50" roughness={0.7} />
+            <boxGeometry args={[0.14, 0.35, 5.6]} />
+            <meshStandardMaterial color="#9d7848" roughness={0.76} />
           </mesh>
         ))}
       </group>
 
-      <hemisphereLight args={["#9dbdb5", "#1a211e", 0.28]} />
-      <directionalLight color="#d6bc8d" intensity={0.55} position={[-14, 15, -18]} />
+      <hemisphereLight args={["#a9c4bd", "#141b18", 0.34]} />
+      <directionalLight color="#d6bc8d" intensity={0.62} position={[-14, 15, -18]} />
     </group>
   );
 }
