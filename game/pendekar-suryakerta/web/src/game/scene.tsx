@@ -194,8 +194,8 @@ function Knight({ world }: { world: World }) {
       mat.emissiveIntensity = 1.35 + Math.sin(world.time * 4) * 0.45;
     }
     const lean = Math.sin(world.time * 13) * 0.025 * moving;
-    shoulderL.current?.rotation.z = 0.04 + lean;
-    shoulderR.current?.rotation.z = -0.04 - lean;
+    if (shoulderL.current) shoulderL.current.rotation.z = 0.04 + lean;
+    if (shoulderR.current) shoulderR.current.rotation.z = -0.04 - lean;
   });
   return (
     <group ref={ref}>
