@@ -41,7 +41,7 @@ export class Input {
   justSnare = false;
   justRend = false;
   justPause = false;
-  justConfirm = false;
+  justConfirm = false;\n  justRelic1 = false;\n  justRelic2 = false;\n  justRelic3 = false;
   pointerAttack = false;
   touchAttack = false;
   touchDodge = false;
@@ -54,7 +54,7 @@ export class Input {
   private prevSnare = false;
   private prevRend = false;
   private prevPause = false;
-  private prevConfirm = false;
+  private prevConfirm = false;\n  private prevRelic1 = false;\n  private prevRelic2 = false;\n  private prevRelic3 = false;
   private detach: (() => void) | null = null;
   private onVisibility: (() => void) | null = null;
 
@@ -142,7 +142,7 @@ export class Input {
     const snare = codes.has("KeyE") || this.touchSnare;
     const rend = codes.has("KeyF") || codes.has("KeyR") || this.touchRend;
     const pause = codes.has("Escape") || codes.has("KeyP") || padPause;
-    const confirm = codes.has("Enter") || codes.has("Space");
+    const confirm = codes.has("Enter") || codes.has("Space");\n    const relic1 = codes.has("Digit1");\n    const relic2 = codes.has("Digit2");\n    const relic3 = codes.has("Digit3");
 
     this.justAttack = attack && !this.prevAttack;
     this.justDodge = dodge && !this.prevDodge;
@@ -150,7 +150,7 @@ export class Input {
     this.justSnare = snare && !this.prevSnare;
     this.justRend = rend && !this.prevRend;
     this.justPause = pause && !this.prevPause;
-    this.justConfirm = confirm && !this.prevConfirm;
+    this.justConfirm = confirm && !this.prevConfirm;\n    this.justRelic1 = relic1 && !this.prevRelic1;\n    this.justRelic2 = relic2 && !this.prevRelic2;\n    this.justRelic3 = relic3 && !this.prevRelic3;
     this.attackHeld = attack;
     this.dodgeHeld = dodge;
     this.prevAttack = attack;
@@ -159,7 +159,7 @@ export class Input {
     this.prevSnare = snare;
     this.prevRend = rend;
     this.prevPause = pause;
-    this.prevConfirm = confirm;
+    this.prevConfirm = confirm;\n    this.prevRelic1 = relic1;\n    this.prevRelic2 = relic2;\n    this.prevRelic3 = relic3;
     this.pointerAttack = false;
   }
 }
