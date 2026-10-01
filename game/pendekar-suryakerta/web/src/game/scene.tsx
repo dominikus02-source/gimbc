@@ -504,6 +504,76 @@ function Telegraphs({ world }: { world: World }) {
   );
 }
 
+
+function WorldDressing() {
+  const trees = [
+    [-16, -13, 1.05], [-10, -17, 0.9], [0, -17, 1.15], [10, -16, 1.0],
+    [17, -11, 1.05], [18, 0, 0.95], [16, 11, 1.05], [9, 16, 0.95],
+    [0, 17, 1.05], [-9, 16, 0.95], [-17, 11, 1.05], [-18, 0, 0.95],
+    [-17, -7, 0.9], [14, -5, 0.82], [-13, 5, 0.86]
+  ] as const;
+
+  return (
+    <group>
+      {trees.map(([x, z, s], i) => (
+        <group key={i} position={[x, 0, z]} scale={s}>
+          <mesh position={[0, 1.4, 0]} castShadow>
+            <cylinderGeometry args={[0.2, 0.3, 2.8, 8]} />
+            <meshStandardMaterial color="#3b2a20" roughness={0.95} />
+          </mesh>
+          <mesh position={[0, 3.05, 0]} castShadow>
+            <coneGeometry args={[1.55, 3.0, 9]} />
+            <meshStandardMaterial color="#214238" roughness={0.9} />
+          </mesh>
+          <mesh position={[0.18, 3.82, -0.05]} castShadow>
+            <coneGeometry args={[0.95, 1.9, 9]} />
+            <meshStandardMaterial color="#315b4c" roughness={0.86} />
+          </mesh>
+        </group>
+      ))}
+
+      <group position={[0, 0, -17]}>
+        <mesh position={[-3.1, 3.1, 0]} castShadow>
+          <cylinderGeometry args={[0.5, 0.7, 6.2, 8]} />
+          <meshStandardMaterial color="#4a3424" roughness={0.9} />
+        </mesh>
+        <mesh position={[3.1, 3.1, 0]} castShadow>
+          <cylinderGeometry args={[0.5, 0.7, 6.2, 8]} />
+          <meshStandardMaterial color="#4a3424" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 6.15, 0]} castShadow>
+          <boxGeometry args={[7.5, 0.75, 0.9]} />
+          <meshStandardMaterial color="#8b6337" roughness={0.72} metalness={0.12} />
+        </mesh>
+        <mesh position={[0, 4.65, 0]} castShadow>
+          <boxGeometry args={[5.6, 0.42, 0.72]} />
+          <meshStandardMaterial color="#624324" roughness={0.82} />
+        </mesh>
+        <mesh position={[0, 5.4, 0.04]}>
+          <boxGeometry args={[2.7, 0.7, 0.12]} />
+          <meshStandardMaterial color="#a77b42" roughness={0.7} />
+        </mesh>
+      </group>
+
+      <group position={[0, 0, 17]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <boxGeometry args={[7.5, 5.5, 0.35]} />
+          <meshStandardMaterial color="#6d6252" roughness={0.95} />
+        </mesh>
+        {[-2.6, -1.3, 0, 1.3, 2.6].map((x) => (
+          <mesh key={x} position={[x, 0.2, 0]}>
+            <boxGeometry args={[0.16, 0.35, 5.6]} />
+            <meshStandardMaterial color="#b08a50" roughness={0.7} />
+          </mesh>
+        ))}
+      </group>
+
+      <hemisphereLight args={["#9dbdb5", "#1a211e", 0.28]} />
+      <directionalLight color="#d6bc8d" intensity={0.55} position={[-14, 15, -18]} />
+    </group>
+  );
+}
+
 export function GameCanvas({ world }: { world: World }) {
   return (
     <Canvas
