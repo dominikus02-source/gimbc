@@ -516,18 +516,18 @@ function WorldDressing() {
   return (
     <group>
       {trees.map(([x, z, s], i) => (
-        <group key={i} position={[x, 0, z]} scale={s}>
-          <mesh position={[0, 1.4, 0]} castShadow>
-            <cylinderGeometry args={[0.2, 0.3, 2.8, 8]} />
-            <meshStandardMaterial color="#3b2a20" roughness={0.95} />
+        <group key={i} position={[x, 0.05, z]} scale={s} frustumCulled={false}>
+          <mesh position={[0, 1.5, 0]} castShadow>
+            <cylinderGeometry args={[0.24, 0.34, 3.0, 8]} />
+            <meshBasicMaterial color="#4a3022" />
           </mesh>
-          <mesh position={[0, 3.05, 0]} castShadow>
-            <coneGeometry args={[1.55, 3.0, 9]} />
-            <meshStandardMaterial color="#214238" roughness={0.9} />
+          <mesh position={[0, 3.35, 0]} castShadow>
+            <coneGeometry args={[1.8, 3.5, 10]} />
+            <meshBasicMaterial color="#1f5141" />
           </mesh>
-          <mesh position={[0.18, 3.82, -0.05]} castShadow>
-            <coneGeometry args={[0.95, 1.9, 9]} />
-            <meshStandardMaterial color="#315b4c" roughness={0.86} />
+          <mesh position={[0.2, 4.35, -0.05]} castShadow>
+            <coneGeometry args={[1.12, 2.2, 10]} />
+            <meshBasicMaterial color="#37735c" />
           </mesh>
         </group>
       ))}
@@ -552,6 +552,25 @@ function WorldDressing() {
         <mesh position={[0, 5.4, 0.04]}>
           <boxGeometry args={[2.7, 0.7, 0.12]} />
           <meshStandardMaterial color="#a77b42" roughness={0.7} />
+        </mesh>
+      </group>
+
+      <group position={[0, 0, -10]}>
+        <mesh position={[-4.2, 3.5, 0]} castShadow>
+          <cylinderGeometry args={[0.6, 0.78, 7, 8]} />
+          <meshBasicMaterial color="#573522" />
+        </mesh>
+        <mesh position={[4.2, 3.5, 0]} castShadow>
+          <cylinderGeometry args={[0.6, 0.78, 7, 8]} />
+          <meshBasicMaterial color="#573522" />
+        </mesh>
+        <mesh position={[0, 7.0, 0]} castShadow>
+          <boxGeometry args={[10, 0.9, 1.0]} />
+          <meshBasicMaterial color="#b47a38" />
+        </mesh>
+        <mesh position={[0, 5.65, 0]} castShadow>
+          <boxGeometry args={[7.0, 0.35, 0.8]} />
+          <meshBasicMaterial color="#7b4d28" />
         </mesh>
       </group>
 
