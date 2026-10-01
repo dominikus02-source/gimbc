@@ -153,7 +153,7 @@ export function Overlay({ world }: { world: World }) {
             <p className="text-[11px] font-medium tracking-[0.24em] text-muted uppercase">Peninggalan menawarkan hadiah</p>
             <h2 className="mt-2 font-display text-3xl tracking-tight text-fg">Pilih peninggalan</h2>
             <div className="mt-6 grid gap-3 md:grid-cols-3">
-              {hud.choices.map((c) => <button key={c.id} type="button" onClick={() => world.choose(c.id)} className="rounded-xl border border-border bg-raised p-4 text-left transition-transform duration-150 hover:border-border-strong active:scale-[0.99]"><p className="font-medium text-fg">{c.name}</p><p className="mt-2 text-sm leading-relaxed text-muted">{c.desc}</p></button>)}
+              {hud.choices.map((c) => <button key={c.id} type="button" onClick={() => world.choose(c.id)} className="rounded-xl border border-border bg-raised p-4 text-left transition-transform duration-150 hover:border-border-strong active:scale-[0.99]"><div className="flex items-start justify-between gap-3"><p className="font-medium text-fg">{c.name}</p><span className="grid h-6 min-w-6 place-items-center rounded-md border border-border-strong bg-surface text-[10px] font-semibold text-muted">{i + 1}</span></div><p className="mt-2 text-sm leading-relaxed text-muted">{c.desc}</p><p className="mt-3 text-[10px] text-subtle">Tekan {i + 1} untuk memilih</p></button>)}
             </div>
           </div>
         </div>
