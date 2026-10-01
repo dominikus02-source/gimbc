@@ -14,6 +14,9 @@ export type HudState = {
   phase: Phase;
   hp: number;
   maxHp: number;
+  bossHp: number;
+  bossMaxHp: number;
+  bossRage: number;
   stamina: number;
   maxStamina: number;
   souls: number;
@@ -37,6 +40,9 @@ export const initialHud: HudState = {
   phase: "title",
   hp: 100,
   maxHp: 100,
+  bossHp: 0,
+  bossMaxHp: 0,
+  bossRage: 0,
   stamina: 100,
   maxStamina: 100,
   souls: 0,
