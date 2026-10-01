@@ -32,10 +32,29 @@ replace("src/game/Overlay.tsx", [
   ["<dt>Jurusan</dt>","<dt>Jurus</dt>"],
   ["Q nova · E jerat · F tebas","Q jurus · E jerat · F tebas"],
   ["· wave {hud.bestGelombang} ·","· gelombang {hud.bestGelombang} ·"],
+  ["Best · wave {hud.bestWave} · {hud.bestSouls} souls","Terbaik · gelombang {hud.bestWave} · {hud.bestSouls} jiwa"],
+  ["aria-label=\"Pause\"","aria-label=\"Jeda\""],
+  [">Paused</h2>",">Jeda</h2>"],
   ['<h2 className="font-display text-3xl tracking-tight">Jedad</h2>','<h2 className="font-display text-3xl tracking-tight">Jeda</h2>'],
   ['<dt className="text-subtle">Souls</dt>','<dt className="text-subtle">Jiwa</dt>'],
   ['<dt className="text-subtle">Felled</dt>','<dt className="text-subtle">Dikalahkan</dt>'],
   ["onPointerGerak={onGerak}","onPointerMove={onGerak}"]
+]);
+
+replace("src/game/relics.ts", [
+  ["Ember Edge","Tepi Bara"],["Melee strikes deal 25% more damage.","Serangan jarak dekat menghasilkan 25% lebih banyak kerusakan."],
+  ["Windstep","Langkah Angin"],["Move and dash 18% faster.","Bergerak dan lari cepat 18% lebih cepat."],
+  ["Blood Price","Harga Darah"],["Recover 12% of damage dealt.","Pulihkan 12% dari kerusakan yang diberikan."],
+  ["Soul Magnet","Magnet Jiwa"],["Souls pull in from much farther.","Jiwa tertarik dari jarak yang lebih jauh."],
+  ["Second Skin","Kulit Kedua"],["Incoming damage reduced by 18%.","Kerusakan yang diterima berkurang 18%."],
+  ["Frenzy Sigil","Segel Amarah"],["Attacks recover 20% faster.","Serangan pulih 20% lebih cepat."],
+  ["Cinder Wake","Jejak Bara"],["Dash scorches nearby foes.","Lari cepat membakar musuh di sekitar."],
+  ["Crit Mark","Tanda Kritis"],["20% chance for a double strike.","Peluang 20% untuk menghasilkan serangan ganda."],
+  ["Deep Lungs","Napas Panjang"],["+35 stamina and faster recovery.","+35 stamina dan pemulihan lebih cepat."],
+  ["Thorn Oath","Sumpah Duri"],["Attackers take 20% of the blow back.","Penyerang menerima kembali 20% dari serangannya."],
+  ["Ash Salve","Ramuan Bara"],["Restore vitality and gain 40 souls.","Pulihkan tenaga dan dapatkan 40 jiwa."],
+  ["Kindling","Nyala Bara"],["Permanent +8% damage.","+8% kerusakan permanen."],
+  ["Gale Sip","Teguk Angin"],["Permanent +8% move speed.","+8% kecepatan bergerak permanen."]
 ]);
 
 replace("src/game/sim.ts", [
