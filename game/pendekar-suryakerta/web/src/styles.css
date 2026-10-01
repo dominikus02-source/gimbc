@@ -90,3 +90,18 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Pada ponsel, arena dikunci ke pengalaman mendatar agar ruang pandang dan kontrol tetap lega. */
+@media (orientation: portrait) and (max-width: 900px) {
+  .portrait-lock { display: flex !important; }
+}
+
+.game-root:fullscreen {
+  width: 100vw;
+  height: 100dvh;
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .game-root { min-width: 100vw; min-height: 100dvh; }
+}
