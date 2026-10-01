@@ -21,6 +21,8 @@ const TREE_URLS = {
 } as const;
 
 const GATE_URL = "/game/assets/suryakerta/environment/silent_hill_front_gate.glb";
+const ALL_TREE_URLS = Object.values(TREE_URLS).flat();
+
 const BRIDGE_URL = "/game/assets/suryakerta/environment/stylized_bridge_low_poly.glb";
 
 const TREE_PLACEMENTS = [
@@ -184,7 +186,7 @@ function useAssetAvailability(urls: readonly string[]) {
 }
 
 function AssetWorld() {
-  const treeAssets = useAssetAvailability(Object.values(TREE_URLS).flat());
+  const treeAssets = useAssetAvailability(ALL_TREE_URLS);
   const landmarkAssets = useAssetAvailability([GATE_URL, BRIDGE_URL]);
   if (!treeAssets && !landmarkAssets) return null;
 
