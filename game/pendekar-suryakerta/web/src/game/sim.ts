@@ -496,7 +496,10 @@ export class World {
     p.attackChainT = Math.max(0, p.attackChainT - dt);
     if (p.attackChainT <= 0) p.attackStep = 0;
     this.shockT = Math.max(0, this.shockT - dt);
-    this.hitPulse = Math.max(0, this.hitPulse - dt * 4.5);\n    this.impactT = Math.max(0, this.impactT - dt);\n    this.novaT = Math.max(0, this.novaT - dt);\n    this.snareT = Math.max(0, this.snareT - dt);
+    this.hitPulse = Math.max(0, this.hitPulse - dt * 4.5);
+    this.impactT = Math.max(0, this.impactT - dt);
+    this.novaT = Math.max(0, this.novaT - dt);
+    this.snareT = Math.max(0, this.snareT - dt);
     if (this.comboT <= 0) this.combo = 0;
     if (p.comboT <= 0) p.combo = 0;
     this.hurt = Math.max(0, this.hurt - dt * 1.6);
