@@ -1,18 +1,33 @@
 # Pendekar Suryakerta — Arcade Lab
 
-Eksperimen terisolasi untuk mengembangkan **Pendekar Suryakerta** menjadi arcade-action dengan game feel yang kuat.
+Pengembangan terisolasi untuk **Pendekar Suryakerta** sebagai gim aksi arena 3D.
 
-## Aturan
+## Batas aman
 - Tidak menyentuh aplikasi utama BahasaCerdas.
-- Tidak mengubah `main` secara langsung.
-- Semua eksperimen masuk ke branch `feat/pendekar-suryakerta-arcade-v03` lalu melalui pull request.
-- Dependency hasil build lokal (`node_modules`) tidak disimpan di Git.
+- Tidak mengubah branch utama.
+- Sumber gim berada di `game/pendekar-suryakerta/web`.
+- Dependency lokal tidak disimpan di Git.
 
-## Status
-- Character Feel v01
-- Combat Feel v01
-- Arcade Feel v02
-- Arcade Feel v03
+## Isi vertical slice
+- Arena 3D dengan pencahayaan sinematik.
+- Pendekar, tiga tipe musuh, dan Penjaga Besar.
+- Gelombang bertahap dengan variasi tekanan.
+- Serangan berantai, Tebas, Jurus, Jerat, dan Lari Cepat.
+- Penghindaran sempurna, telegrap serangan, efek benturan, angka kerusakan, dan kombo.
+- Pilihan peninggalan setelah gelombang.
+- Tingkat, jiwa, pemulihan, rekor lokal, dan layar kalah.
+- Kendali papan ketik, tetikus, layar sentuh, dan gamepad.
+- Antarmuka pemain berbahasa Indonesia.
 
-## Target berikutnya
-Polish visual karakter, animasi musuh, efek arena, audio timing, dan playtest vertical slice.
+## Menjalankan
+Masuk ke `game/pendekar-suryakerta/web`, lalu:
+
+```bash
+npm install
+npm run dev
+```
+
+Buka `http://localhost:8080`.
+
+## Catatan pemeriksaan
+Pemeriksaan statis permainan sudah dijalankan pada workspace pengembangan. Pemasangan dependency dan build Vite penuh tetap perlu dijalankan pada lingkungan yang memiliki akses paket npm.
