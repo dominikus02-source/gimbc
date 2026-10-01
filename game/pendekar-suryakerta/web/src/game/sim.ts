@@ -322,30 +322,6 @@ export class World {
     this.syncCamera(d);
     this.maybePublish(d);
   }
-    if (this.input.justPause) {
-      this.phase = "paused";
-      this.publish(true);
-      return;
-    }
-
-    if (this.hitstop > 0) {
-      this.hitstop -= d;
-      this.tickVfx(d * 0.35);
-      this.syncCamera(d);
-      return;
-    }
-
-    this.acc += d;
-    let steps = 0;
-    while (this.acc >= STEP && steps < 5) {
-      this.fixed(STEP);
-      this.acc -= STEP;
-      steps++;
-    }
-    this.tickVfx(d);
-    this.syncCamera(d);
-    this.maybePublish(d);
-  }
 
   private wireControls() {
     if (typeof window === "undefined") return;
