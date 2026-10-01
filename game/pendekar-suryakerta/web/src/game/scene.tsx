@@ -51,9 +51,29 @@ function SimLoop({ world }: { world: World }) {
 }
 
 function Arena({ world }: { world: World }) {
+  const sigil = useRef<THREE.Mesh>(null);
+  const innerRing = useRef<THREE.Mesh>(null);
+  const centerLight = useRef<THREE.PointLight>(null);
+  useFrame(() => {
+    const pulse = 1 + Math.sin(world.time * 2.2) * 0.035;
+    if (sigil.current) {
+      sigil.current.rotation.z = world.time * 0.08;
+      sigil.current.scale.setScalar(pulse);
+      const mat = sigil.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.18 + Math.sin(world.time * 2.2) * 0.035;
+    }
+    if (innerRing.current) {
+      innerRing.current.rotation.z = -world.time * 0.16;
+      const k = 1 + Math.sin(world.time * 2.2) * 0.025;
+      innerRing.current.scale.setScalar(k);
+    }
+    if (centerLight.current) {
+      centerLight.current.intensity = 6.5 + Math.sin(world.time * 2.2) * 0.8 + world.hitPulse * 3.5;
+    }
+  });
   return (
     <group>
-      <pointLight color="#f0d49a" intensity={7} distance={15} position={[0, 5.5, 0]} />
+      <pointLight ref={centerLight} color="#f0d49a" intensity={7} distance={15} position={[0, 5.5, 0]} />
       <pointLight color="#6a9a94" intensity={4.2} distance={11} position={[0, 2.5, -5]} />
       <pointLight color="#d06a4e" intensity={2.2} distance={10} position={[0, 2.5, 7]} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, 0, 0]}>
@@ -72,9 +92,13 @@ function Arena({ world }: { world: World }) {
         <cylinderGeometry args={[3.1, 3.4, 0.36, 24]} />
         <meshStandardMaterial color="#626a74" roughness={0.84} />
       </mesh>
-      <mesh position={[0, 0.4, 0]}>
+      <mesh ref={sigil} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.43, 0]}>
         <torusGeometry args={[2.15, 0.045, 8, 32]} />
-        <meshStandardMaterial color="#c45c4a" emissive="#c45c4a" emissiveIntensity={0.7} />
+        <meshBasicMaterial color="#c45c4a" transparent opacity={0.2} depthWrite={false} />
+      </mesh>
+      <mesh ref={innerRing} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.445, 0]}>
+        <ringGeometry args={[1.15, 1.19, 32]} />
+        <meshBasicMaterial color="#d6b46a" transparent opacity={0.18} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
         <ringGeometry args={[7.4, 7.48, 64]} />
