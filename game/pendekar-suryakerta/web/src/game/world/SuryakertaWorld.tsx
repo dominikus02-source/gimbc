@@ -188,28 +188,17 @@ function useAssetAvailability(urls: readonly string[]) {
 function AssetWorld() {
   const treeAssets = useAssetAvailability(ALL_TREE_URLS);
   const landmarkAssets = useAssetAvailability([GATE_URL, BRIDGE_URL]);
-  if (!treeAssets && !landmarkAssets) return null;
 
   return (
     <Suspense fallback={null}>
-      {treeAssets && TREE_PLACEMENTS.map((tree, indexport function SuryakertaWorld() {
-  return (
-    <group>
-      <DistantForest />
-      <ProceduralWorld />
-      <AssetWorld />
-      <hemisphereLight args={["#a7c2bd", "#172018", 0.42]} />
-      <directionalLight
-        color="#d7c29a"
-        intensity={0.8}
-        position={[-16, 18, -20]}
-      />
-      <pointLight color="#d49a5a" intensity={1.8} distance={18} position={[0, 4, -18]} />
-      <pointLight color="#5f9b8d" intensity={1.2} distance={16} position={[0, 3, 18]} />
-    </group>
-  );
-}) => (
-        <Tree key={index} kind={tree.kind} position={[tree.x, 0, tree.z]} scale={tree.s} rotation={tree.r} />
+      {treeAssets && TREE_PLACEMENTS.map((tree, index) => (
+        <Tree
+          key={index}
+          kind={tree.kind}
+          position={[tree.x, 0, tree.z]}
+          scale={tree.s}
+          rotation={tree.r}
+        />
       ))}
       {landmarkAssets && <SuryakertaGate />}
       {landmarkAssets && <SuryakertaBridge />}
@@ -221,17 +210,8 @@ export function SuryakertaWorld() {
   return (
     <group>
       <DistantForest />
-      <SuryakertaGate />
-      <SuryakertaBridge />
-      {TREE_PLACEMENTS.map((tree, index) => (
-        <Tree
-          key={index}
-          kind={tree.kind}
-          position={[tree.x, 0, tree.z]}
-          scale={tree.s}
-          rotation={tree.r}
-        />
-      ))}
+      <ProceduralWorld />
+      <AssetWorld />
       <hemisphereLight args={["#a7c2bd", "#172018", 0.42]} />
       <directionalLight
         color="#d7c29a"
