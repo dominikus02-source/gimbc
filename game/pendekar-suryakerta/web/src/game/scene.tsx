@@ -506,11 +506,11 @@ function Telegraphs({ world }: { world: World }) {
 
 
 function WorldDressing() {
-  // Penempatan sengaja berada di koridor kamera gameplay agar world pasti terbaca.
+  // World berada di perimeter agar memperkaya suasana tanpa menutup pertarungan.
   const trees = [
-    [-8, -6, 1.05], [-4.5, -8, 0.9], [0, -8.5, 1.1], [4.5, -8, 0.95], [8, -6, 1.05],
-    [-9, -1, 0.9], [9, -1, 0.95], [-10, 5, 0.9], [10, 5, 0.95],
-    [-7, 9, 0.82], [7, 9, 0.86]
+    [-15, -12, 0.72], [-10, -15, 0.62], [0, -16, 0.7], [10, -15, 0.64], [15, -12, 0.72],
+    [-17, -4, 0.68], [17, -3, 0.7], [-18, 6, 0.62], [18, 7, 0.68],
+    [-13, 13, 0.62], [0, 16, 0.7], [13, 13, 0.64]
   ] as const;
 
   return (
@@ -532,7 +532,7 @@ function WorldDressing() {
         </group>
       ))}
 
-      <group position={[0, 0, -7]}>
+      <group position={[0, 0, -15]} scale={0.72}>
         <mesh position={[-3.1, 3.1, 0]} castShadow>
           <cylinderGeometry args={[0.5, 0.7, 6.2, 8]} />
           <meshStandardMaterial color="#4a3424" roughness={0.9} />
@@ -555,7 +555,7 @@ function WorldDressing() {
         </mesh>
       </group>
 
-      <group position={[0, 0, -5]}>
+      <group position={[0, 0, -13]} scale={0.62}>
         <mesh position={[-4.2, 3.5, 0]} castShadow>
           <cylinderGeometry args={[0.6, 0.78, 7, 8]} />
           <meshBasicMaterial color="#573522" />
@@ -574,7 +574,7 @@ function WorldDressing() {
         </mesh>
       </group>
 
-      <group position={[0, 0, 9]}>
+      <group position={[0, 0, 15]} scale={0.8}>
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <boxGeometry args={[7.5, 5.5, 0.35]} />
           <meshStandardMaterial color="#6d6252" roughness={0.95} />
