@@ -6,6 +6,8 @@ import { useHud, type HudState, type Phase } from "./hud";
 
 const ARENA = 22;
 const STEP = 1 / 60;
+const WORLD_OBSERVATION_MODE = true;
+
 const MAX_ENEMIES = 22;
 const MAX_PROJ = 28;
 const MAX_PICK = 40;
@@ -241,10 +243,16 @@ export class World {
     this.resetRun();
     this.phase = "playing";
     this.snapCamera();
-    this.banner = "Gelombang 1";
-    this.bannerT = 2.2;
-    this.beginWave();
-    this.waveGrace = 1.2;
+    if (WORLD_OBSERVATION_MODE) {
+      this.banner = "Mode Observasi Dunia";
+      this.bannerT = 2.2;
+      this.waveGrace = 0;
+    } else {
+      this.banner = "Gelombang 1";
+      this.bannerT = 2.2;
+      this.beginWave();
+      this.waveGrace = 1.2;
+    }
     this.publish(true);
   }
 
@@ -456,13 +464,19 @@ export class World {
       this.bannerT -= dt;
       if (this.bannerT <= 0) this.banner = null;
     }
-    this.tickSpawn(dt);
+    if (!WORLD_OBSERVATION_MODE) {
+      this.tickSpawn(dt);
+    }
     this.tickPlayer(dt);
-    this.tickEnemies(dt);
+    if (!WORLD_OBSERVATION_MODE) {
+      this.tickEnemies(dt);
+    }
     this.tickProjs(dt);
     this.tickPickups(dt);
-    this.separateEnemies();
-    this.checkWaveClear();
+    if (!WORLD_OBSERVATION_MODE) {
+      this.separateEnemies();
+      this.checkWaveClear();
+    }
   }
 
   private tickSpawn(dt: number) {
