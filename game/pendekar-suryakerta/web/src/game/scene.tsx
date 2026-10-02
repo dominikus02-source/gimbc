@@ -1,9 +1,9 @@
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, Stars } from "@react-three/drei";
+import { Clone, Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { World } from "./sim";
-import { SuryakertaWorld } from "./world/SuryakertaWorld";
+
 
 const stone = new THREE.MeshStandardMaterial({ color: "#606771", roughness: 0.88, metalness: 0.08 });
 const stoneDark = new THREE.MeshStandardMaterial({ color: "#383e47", roughness: 0.92, metalness: 0.06 });
@@ -38,6 +38,15 @@ const coneTeleGeo = new THREE.CircleGeometry(1, 32, -0.45, 0.9);
 const partGeo = new THREE.SphereGeometry(1, 6, 5);
 const trailGeo = new THREE.CylinderGeometry(0.045, 0.025, 1, 6);
 
+const LANDSCAPE_URL = "/game/assets/world/DuniaBahasaWorld.glb";
+
+function LandscapeWorld() {
+  const { scene } = useGLTF(LANDSCAPE_URL);
+  return <Clone object={scene} castShadow receiveShadow />;
+}
+
+useGLTF.preload(LANDSCAPE_URL);
+
 function SimLoop({ world }: { world: World }) {
   useFrame(({ camera }, dt) => {
     world.step(dt);
@@ -53,86 +62,6 @@ function SimLoop({ world }: { world: World }) {
     }
   });
   return null;
-}
-
-function Arena({ world }: { world: World }) {
-  const arenaStone = new THREE.MeshStandardMaterial({ color: "#3f4a4c", roughness: 0.96, metalness: 0.02 });
-  const arenaEdge = new THREE.MeshStandardMaterial({ color: "#202a2b", roughness: 0.9, metalness: 0.08 });
-  const warmStone = new THREE.MeshStandardMaterial({ color: "#6b5948", roughness: 0.88, metalness: 0.03 });
-  const bronzeTrim = new THREE.MeshStandardMaterial({ color: "#b98a4b", roughness: 0.34, metalness: 0.72 });
-  const jadeTrim = new THREE.MeshStandardMaterial({ color: "#4b8f80", emissive: "#17483f", emissiveIntensity: 0.65, roughness: 0.3, metalness: 0.3 });
-
-  return (
-    <group>
-      <pointLight color="#f0d49a" intensity={5.2} distance={16} position={[0, 5.5, 0]} />
-      <pointLight color="#6a9a94" intensity={2.8} distance={12} position={[0, 3, -5]} />
-      <pointLight color="#d06a4e" intensity={1.6} distance={11} position={[0, 3, 7]} />
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[22.4, 72]} />
-        <primitive object={arenaStone} attach="material" />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]} receiveShadow>
-        <ringGeometry args={[20.5, 22.4, 72]} />
-        <primitive object={arenaEdge} attach="material" />
-      </mesh>
-      <mesh position={[0, 0.72, 0]}>
-        <cylinderGeometry args={[22.35, 22.35, 1.45, 72, 1, true]} />
-        <primitive object={arenaEdge} attach="material" />
-      </mesh>
-
-      <mesh position={[0, 0.16, 0]} receiveShadow>
-        <cylinderGeometry args={[3.65, 4.05, 0.32, 32]} />
-        <primitive object={warmStone} attach="material" />
-      </mesh>
-      <mesh position={[0, 0.34, 0]}>
-        <torusGeometry args={[2.55, 0.055, 10, 48]} />
-        <primitive object={bronzeTrim} attach="material" />
-      </mesh>
-      <mesh position={[0, 0.39, 0]}>
-        <torusGeometry args={[2.18, 0.032, 8, 48]} />
-        <primitive object={jadeTrim} attach="material" />
-      </mesh>
-
-      {[6.5, 11.5, 16.5].map((radius, i) => (
-        <mesh key={radius} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.028 + i * 0.002, 0]}>
-          <ringGeometry args={[radius, radius + 0.045, 72]} />
-          <meshBasicMaterial color={i === 1 ? "#a98a55" : "#71817f"} transparent opacity={i === 1 ? 0.2 : 0.12} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-
-      {world.pillars.map((p, i) => (
-        <group key={i} position={[p.x, 0, p.z]}>
-          <mesh material={stone} castShadow receiveShadow position={[0, p.h * 0.5, 0]} scale={[p.r, p.h, p.r]}>
-            <cylinderGeometry args={[1, 1.08, 1, 10]} />
-          </mesh>
-          <mesh material={stoneDark} position={[0, p.h + 0.12, 0]} scale={[p.r * 1.16, 0.24, p.r * 1.16]}>
-            <cylinderGeometry args={[1, 1, 1, 10]} />
-          </mesh>
-          <mesh material={bronzeTrim} position={[0, p.h * 0.62, 0]} scale={[p.r * 1.015, 0.055, p.r * 1.015]}>
-            <torusGeometry args={[1, 0.07, 6, 10]} />
-          </mesh>
-          <mesh material={jadeTrim} position={[0, p.h * 0.66, 0]} scale={[p.r * 1.018, 0.018, p.r * 1.018]}>
-            <torusGeometry args={[1, 0.045, 6, 10]} />
-          </mesh>
-        </group>
-      ))}
-
-      {[0, 1, 2, 3].map((i) => {
-        const a = (i / 4) * Math.PI * 2 + 0.4;
-        const x = Math.sin(a) * 18.4;
-        const z = Math.cos(a) * 18.4;
-        return (
-          <group key={`brazier-${i}`} position={[x, 0, z]}>
-            <mesh material={stoneDark} position={[0, 0.45, 0]} scale={[0.34, 0.9, 0.34]} geometry={cylGeo} />
-            <mesh material={bronzeTrim} position={[0, 0.88, 0]} scale={[0.48, 0.08, 0.48]} geometry={cylGeo} />
-            <mesh material={ember} position={[0, 1.05, 0]} scale={[0.22, 0.22, 0.22]} geometry={sphGeo} />
-            <pointLight color="#e07a4a" intensity={4.2} distance={9} position={[0, 1.3, 0]} />
-          </group>
-        );
-      })}
-    </group>
-  );
 }
 
 function Knight({ world }: { world: World }) {
@@ -547,113 +476,6 @@ function Telegraphs({ world }: { world: World }) {
 }
 
 
-function WorldDressing() {
-  const trees = [
-    [-15, -12, 0.72], [-10, -15, 0.62], [0, -16, 0.7], [10, -15, 0.64], [15, -12, 0.72],
-    [-17, -4, 0.68], [17, -3, 0.7], [-18, 6, 0.62], [18, 7, 0.68],
-    [-13, 13, 0.62], [0, 16, 0.7], [13, 13, 0.64],
-  ] as const;
-
-  const rocks = [
-    [-12, -9, 0.9], [12, -10, 0.75], [-16, 2, 0.7], [16, 4, 0.8],
-    [-11, 11, 0.65], [11, 12, 0.7],
-  ] as const;
-
-  const lanterns = [
-    [-10.5, -12.5], [10.5, -12.5], [-15.5, 5.5], [15.5, 6],
-  ] as const;
-
-  return (
-    <group>
-      {trees.map(([x, z, s], i) => (
-        <group key={i} position={[x, 0.05, z]} scale={s} frustumCulled={false}>
-          <mesh position={[0, 1.45, 0]} castShadow>
-            <cylinderGeometry args={[0.18, 0.3, 2.9, 7]} />
-            <meshStandardMaterial color="#4a3022" roughness={0.92} />
-          </mesh>
-          <mesh position={[-0.42, 2.8, 0]} rotation={[0, 0, -0.08]} castShadow>
-            <coneGeometry args={[1.35, 2.5, 9]} />
-            <meshStandardMaterial color="#173e33" roughness={0.9} />
-          </mesh>
-          <mesh position={[0.38, 3.35, -0.04]} rotation={[0, 0, 0.08]} castShadow>
-            <coneGeometry args={[1.18, 2.35, 9]} />
-            <meshStandardMaterial color="#245849" roughness={0.88} />
-          </mesh>
-          <mesh position={[0, 4.05, 0.02]} castShadow>
-            <coneGeometry args={[0.82, 1.7, 9]} />
-            <meshStandardMaterial color="#34705a" roughness={0.84} />
-          </mesh>
-        </group>
-      ))}
-
-      {rocks.map(([x, z, s], i) => (
-        <mesh key={`rock-${i}`} position={[x, 0.18, z]} scale={s} rotation={[0.08, i * 0.7, -0.05]} castShadow>
-          <icosahedronGeometry args={[0.75, 1]} />
-          <meshStandardMaterial color="#4b514d" roughness={0.96} />
-        </mesh>
-      ))}
-
-      <group position={[0, 0, -15]} scale={0.56}>
-        <mesh position={[-3.1, 3.1, 0]} castShadow>
-          <cylinderGeometry args={[0.5, 0.7, 6.2, 8]} />
-          <meshStandardMaterial color="#4a3424" roughness={0.9} />
-        </mesh>
-        <mesh position={[3.1, 3.1, 0]} castShadow>
-          <cylinderGeometry args={[0.5, 0.7, 6.2, 8]} />
-          <meshStandardMaterial color="#4a3424" roughness={0.9} />
-        </mesh>
-        <mesh position={[0, 6.15, 0]} castShadow>
-          <boxGeometry args={[7.5, 0.75, 0.9]} />
-          <meshStandardMaterial color="#8b6337" roughness={0.72} metalness={0.12} />
-        </mesh>
-        <mesh position={[0, 4.65, 0]} castShadow>
-          <boxGeometry args={[5.6, 0.42, 0.72]} />
-          <meshStandardMaterial color="#624324" roughness={0.82} />
-        </mesh>
-        <mesh position={[0, 5.4, 0.04]}>
-          <boxGeometry args={[2.7, 0.7, 0.12]} />
-          <meshStandardMaterial color="#a77b42" roughness={0.7} metalness={0.08} />
-        </mesh>
-      </group>
-
-      {lanterns.map(([x, z], i) => (
-        <group key={`lantern-${i}`} position={[x, 0, z]}>
-          <mesh position={[0, 1.25, 0]} castShadow>
-            <cylinderGeometry args={[0.08, 0.11, 2.5, 6]} />
-            <meshStandardMaterial color="#3a2921" roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 2.45, 0]} castShadow>
-            <cylinderGeometry args={[0.34, 0.28, 0.48, 8]} />
-            <meshStandardMaterial
-              color="#7b4a25"
-              emissive="#d58b42"
-              emissiveIntensity={0.8}
-              roughness={0.65}
-            />
-          </mesh>
-          <pointLight color="#d89a58" intensity={0.9} distance={6} position={[0, 2.45, 0]} />
-        </group>
-      ))}
-
-      <group position={[0, 0, 15]} scale={0.72}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <boxGeometry args={[7.5, 5.5, 0.35]} />
-          <meshStandardMaterial color="#5e5b52" roughness={0.96} />
-        </mesh>
-        {[-2.6, -1.3, 0, 1.3, 2.6].map((x) => (
-          <mesh key={x} position={[x, 0.2, 0]}>
-            <boxGeometry args={[0.14, 0.35, 5.6]} />
-            <meshStandardMaterial color="#9d7848" roughness={0.76} />
-          </mesh>
-        ))}
-      </group>
-
-      <hemisphereLight args={["#a9c4bd", "#141b18", 0.34]} />
-      <directionalLight color="#d6bc8d" intensity={0.62} position={[-14, 15, -18]} />
-    </group>
-  );
-}
-
 export function GameCanvas({ world }: { world: World }) {
   return (
     <Canvas
@@ -668,13 +490,10 @@ export function GameCanvas({ world }: { world: World }) {
       }}
     >
       <SimLoop world={world} />
-      <fog attach="fog" args={["#14201e", 20, 58]} />
       <hemisphereLight args={["#dbe4ea", "#3a302a", 0.82]} />
       <ambientLight intensity={0.38} />
       <directionalLight castShadow position={[14, 24, 10]} intensity={2.2} color="#c2ced6" shadow-mapSize={[1024, 1024]} shadow-camera-near={2} shadow-camera-far={70} shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} />
-      <Stars radius={90} depth={40} count={500} factor={1.8} saturation={0.08} fade speed={0.2} />
-      <Arena world={world} />
-      <SuryakertaWorld />
+      <LandscapeWorld />
       <Knight world={world} />
       <Enemies world={world} />
       <Pickups world={world} />
