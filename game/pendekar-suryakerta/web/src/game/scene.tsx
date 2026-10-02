@@ -45,24 +45,31 @@ function LandscapeWorld() {
 
   const landscape = useMemo(() => {
     const clone = scene.clone(true);
+    const trees: THREE.Object3D[] = [];
+    const houses: THREE.Object3D[] = [];
+
     clone.traverse((object) => {
       const name = object.name.toLowerCase();
-      const materials = "material" in object && object.material
-        ? Array.isArray(object.material) ? object.material : [object.material]
-        : [];
-      const materialNames = materials
-        .map((material) => (material as THREE.Material).name?.toLowerCase?.() ?? "")
-        .join(" ");
 
-      const isTallHouse =
-        name.includes("rumahpanggung") ||
-        name.includes("rumah_panggung") ||
-        name.includes("rumah-panggung") ||
-        name.includes("stilt_house") ||
-        name.includes("stilt-house") ||
-        name.includes("tall_house") ||
-        name.includes("tall-house");
+      // Jangan menghapus rumah. Kita hanya identifikasi kandidat rumah dan pohon
+      // supaya penempatan rumah bisa diperbaiki tanpa mengubah landscape lainnya.
+      const isHouse =
+        name.includes("house") ||
+        name.includes("rumah") ||
+        name.includes("hut") ||
+        name.includes("cabin") ||
+        name.includes("village");
 
+      const isTree =
+        name.includes("tree") ||
+        name.includes("pohon") ||
+        name.includes("vegetation") ||
+        name.includes("foliage");
+
+      if (isHouse) houses.push(object);
+      if (isTree) trees.push(object);
+
+      // Salju tetap tidak digunakan untuk dunia Suryakerta.
       const isSnow =
         name.includes("snow") ||
         name.includes("salju") ||
@@ -70,10 +77,52 @@ function LandscapeWorld() {
         name.includes("frost") ||
         name.includes("ice");
 
-      if (isTallHouse || isSnow || materialNames.includes("snow") || materialNames.includes("salju")) {
+      const materials = "material" in object && object.material
+        ? Array.isArray(object.material) ? object.material : [object.material]
+        : [];
+      const materialNames = materials
+        .map((material) => (material as THREE.Material).name?.toLowerCase?.() ?? "")
+        .join(" ");
+
+      if (isSnow || materialNames.includes("snow") || materialNames.includes("salju")) {
         object.visible = false;
       }
     });
+
+    // Geser rumah sedikit menjauh dari pohon yang terlalu dekat.
+    // Tidak menghapus atau menambah objek apa pun.
+    for (const house of houses) {
+      const houseBox = new THREE.Box3().setFromObject(house);
+      const houseCenter = houseBox.getCenter(new THREE.Vector3());
+      let nearestTree: THREE.Object3D | null = null;
+      let nearestDistance = Infinity;
+
+      for (const tree of trees) {
+        const treeBox = new THREE.Box3().setFromObject(tree);
+        const treeCenter = treeBox.getCenter(new THREE.Vector3());
+        const dx = houseCenter.x - treeCenter.x;
+        const dz = houseCenter.z - treeCenter.z;
+        const distance = Math.hypot(dx, dz);
+
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestTree = tree;
+        }
+      }
+
+      if (nearestTree && nearestDistance < 3.2) {
+        const treeBox = new THREE.Box3().setFromObject(nearestTree);
+        const treeCenter = treeBox.getCenter(new THREE.Vector3());
+        const dx = houseCenter.x - treeCenter.x;
+        const dz = houseCenter.z - treeCenter.z;
+        const length = Math.hypot(dx, dz) || 1;
+        const push = 3.2 - nearestDistance;
+
+        house.position.x += (dx / length) * push;
+        house.position.z += (dz / length) * push;
+      }
+    }
+
     return clone;
   }, [scene]);
 
