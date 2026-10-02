@@ -42,7 +42,27 @@ const LANDSCAPE_URL = "/game/assets/world/DuniaBahasaWorld.glb";
 
 function LandscapeWorld() {
   const { scene } = useGLTF(LANDSCAPE_URL);
-  return <Clone object={scene} castShadow receiveShadow />;
+
+  const landscape = useMemo(() => {
+    const clone = scene.clone(true);
+    clone.traverse((object) => {
+      const name = object.name.toLowerCase();
+      if (
+        name.includes("rumahpanggung") ||
+        name.includes("rumah_panggung") ||
+        name.includes("rumah-panggung") ||
+        name.includes("stilt_house") ||
+        name.includes("stilt-house") ||
+        name.includes("tall_house") ||
+        name.includes("tall-house")
+      ) {
+        object.visible = false;
+      }
+    });
+    return clone;
+  }, [scene]);
+
+  return <Clone object={landscape} castShadow receiveShadow />;
 }
 
 useGLTF.preload(LANDSCAPE_URL);
