@@ -56,59 +56,78 @@ function SimLoop({ world }: { world: World }) {
 }
 
 function Arena({ world }: { world: World }) {
+  const arenaStone = new THREE.MeshStandardMaterial({ color: "#3f4a4c", roughness: 0.96, metalness: 0.02 });
+  const arenaEdge = new THREE.MeshStandardMaterial({ color: "#202a2b", roughness: 0.9, metalness: 0.08 });
+  const warmStone = new THREE.MeshStandardMaterial({ color: "#6b5948", roughness: 0.88, metalness: 0.03 });
+  const bronzeTrim = new THREE.MeshStandardMaterial({ color: "#b98a4b", roughness: 0.34, metalness: 0.72 });
+  const jadeTrim = new THREE.MeshStandardMaterial({ color: "#4b8f80", emissive: "#17483f", emissiveIntensity: 0.65, roughness: 0.3, metalness: 0.3 });
+
   return (
     <group>
-      <pointLight color="#f0d49a" intensity={7} distance={15} position={[0, 5.5, 0]} />
-      <pointLight color="#6a9a94" intensity={4.2} distance={11} position={[0, 2.5, -5]} />
-      <pointLight color="#d06a4e" intensity={2.2} distance={10} position={[0, 2.5, 7]} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, 0, 0]}>
-        <circleGeometry args={[22.4, 56]} />
-        <meshStandardMaterial color="#4a505b" roughness={0.92} metalness={0.04} />
+      <pointLight color="#f0d49a" intensity={5.2} distance={16} position={[0, 5.5, 0]} />
+      <pointLight color="#6a9a94" intensity={2.8} distance={12} position={[0, 3, -5]} />
+      <pointLight color="#d06a4e" intensity={1.6} distance={11} position={[0, 3, 7]} />
+
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <circleGeometry args={[22.4, 72]} />
+        <primitive object={arenaStone} attach="material" />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <ringGeometry args={[20.6, 22.35, 56]} />
-        <meshStandardMaterial color="#2f353e" roughness={0.9} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]} receiveShadow>
+        <ringGeometry args={[20.5, 22.4, 72]} />
+        <primitive object={arenaEdge} attach="material" />
       </mesh>
-      <mesh position={[0, 0.9, 0]}>
-        <cylinderGeometry args={[22.35, 22.35, 1.8, 48, 1, true]} />
-        <meshStandardMaterial color="#353b44" roughness={0.9} side={THREE.DoubleSide} />
+      <mesh position={[0, 0.72, 0]}>
+        <cylinderGeometry args={[22.35, 22.35, 1.45, 72, 1, true]} />
+        <primitive object={arenaEdge} attach="material" />
       </mesh>
-      <mesh position={[0, 0.18, 0]} receiveShadow>
-        <cylinderGeometry args={[3.1, 3.4, 0.36, 24]} />
-        <meshStandardMaterial color="#626a74" roughness={0.84} />
+
+      <mesh position={[0, 0.16, 0]} receiveShadow>
+        <cylinderGeometry args={[3.65, 4.05, 0.32, 32]} />
+        <primitive object={warmStone} attach="material" />
       </mesh>
-      <mesh position={[0, 0.4, 0]}>
-        <torusGeometry args={[2.15, 0.045, 8, 32]} />
-        <meshStandardMaterial color="#c45c4a" emissive="#c45c4a" emissiveIntensity={0.7} />
+      <mesh position={[0, 0.34, 0]}>
+        <torusGeometry args={[2.55, 0.055, 10, 48]} />
+        <primitive object={bronzeTrim} attach="material" />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
-        <ringGeometry args={[7.4, 7.48, 64]} />
-        <meshBasicMaterial color="#6f7f80" transparent opacity={0.16} side={THREE.DoubleSide} />
+      <mesh position={[0, 0.39, 0]}>
+        <torusGeometry args={[2.18, 0.032, 8, 48]} />
+        <primitive object={jadeTrim} attach="material" />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.026, 0]}>
-        <ringGeometry args={[13.2, 13.28, 64]} />
-        <meshBasicMaterial color="#6f7f80" transparent opacity={0.1} side={THREE.DoubleSide} />
-      </mesh>
+
+      {[6.5, 11.5, 16.5].map((radius, i) => (
+        <mesh key={radius} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.028 + i * 0.002, 0]}>
+          <ringGeometry args={[radius, radius + 0.045, 72]} />
+          <meshBasicMaterial color={i === 1 ? "#a98a55" : "#71817f"} transparent opacity={i === 1 ? 0.2 : 0.12} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+
       {world.pillars.map((p, i) => (
         <group key={i} position={[p.x, 0, p.z]}>
           <mesh material={stone} castShadow receiveShadow position={[0, p.h * 0.5, 0]} scale={[p.r, p.h, p.r]}>
-            <cylinderGeometry args={[1, 1.08, 1, 8]} />
+            <cylinderGeometry args={[1, 1.08, 1, 10]} />
           </mesh>
-          <mesh material={stoneDark} position={[0, p.h + 0.12, 0]} scale={[p.r * 1.15, 0.24, p.r * 1.15]}>
-            <cylinderGeometry args={[1, 1, 1, 8]} />
+          <mesh material={stoneDark} position={[0, p.h + 0.12, 0]} scale={[p.r * 1.16, 0.24, p.r * 1.16]}>
+            <cylinderGeometry args={[1, 1, 1, 10]} />
           </mesh>
-          <mesh material={stoneDark} position={[p.r * 0.7, 0.18, p.r * 0.2]} rotation={[0, i, 0.4]} scale={[0.55, 0.28, 0.4]} geometry={boxGeo} />
+          <mesh material={bronzeTrim} position={[0, p.h * 0.62, 0]} scale={[p.r * 1.015, 0.055, p.r * 1.015]}>
+            <torusGeometry args={[1, 0.07, 6, 10]} />
+          </mesh>
+          <mesh material={jadeTrim} position={[0, p.h * 0.66, 0]} scale={[p.r * 1.018, 0.018, p.r * 1.018]}>
+            <torusGeometry args={[1, 0.045, 6, 10]} />
+          </mesh>
         </group>
       ))}
+
       {[0, 1, 2, 3].map((i) => {
         const a = (i / 4) * Math.PI * 2 + 0.4;
         const x = Math.sin(a) * 18.4;
         const z = Math.cos(a) * 18.4;
         return (
           <group key={`brazier-${i}`} position={[x, 0, z]}>
-            <mesh material={stoneDark} position={[0, 0.45, 0]} scale={[0.32, 0.9, 0.32]} geometry={cylGeo} />
+            <mesh material={stoneDark} position={[0, 0.45, 0]} scale={[0.34, 0.9, 0.34]} geometry={cylGeo} />
+            <mesh material={bronzeTrim} position={[0, 0.88, 0]} scale={[0.48, 0.08, 0.48]} geometry={cylGeo} />
             <mesh material={ember} position={[0, 1.05, 0]} scale={[0.22, 0.22, 0.22]} geometry={sphGeo} />
-            <pointLight color="#e07a4a" intensity={5.5} distance={9} position={[0, 1.3, 0]} />
+            <pointLight color="#e07a4a" intensity={4.2} distance={9} position={[0, 1.3, 0]} />
           </group>
         );
       })}
@@ -121,6 +140,7 @@ function Knight({ world }: { world: World }) {
   const sword = useRef<THREE.Group>(null);
   const cape = useRef<THREE.Mesh>(null);
   const crystal = useRef<THREE.Mesh>(null);
+
   useFrame(() => {
     const p = world.player;
     const g = ref.current;
@@ -129,43 +149,64 @@ function Knight({ world }: { world: World }) {
     const bob = world.phase === "playing" && moving > 0.05 ? Math.sin(world.time * 13) * 0.045 * moving : 0;
     g.position.set(p.x, p.y + bob, p.z);
     g.rotation.y = p.yaw + Math.PI;
+
     if (sword.current) {
       const t = world.slashT > 0 ? world.slashT / world.slashDur : 0;
-      const stepBoost = world.player.attackStep === 2 ? 1.18 : world.player.attackStep === 1 ? 1.06 : 1;
-      sword.current.rotation.z = t > 0 ? -Math.sin(t * Math.PI) * 1.7 * stepBoost : -0.35;
+      const boost = world.player.attackStep === 2 ? 1.18 : world.player.attackStep === 1 ? 1.06 : 1;
+      sword.current.rotation.z = t > 0 ? -Math.sin(t * Math.PI) * 1.7 * boost : -0.35;
       sword.current.rotation.x = t > 0 ? Math.sin(t * Math.PI) * 0.5 : 0.2;
     }
     if (cape.current) cape.current.rotation.x = 0.18 + Math.sin(world.time * 5) * 0.08;
     if (crystal.current) {
       const mat = crystal.current.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 1.2 + Math.sin(world.time * 4) * 0.35;
+      mat.emissiveIntensity = 1.1 + Math.sin(world.time * 4) * 0.3;
     }
   });
+
   return (
     <group ref={ref}>
-      <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
-        <circleGeometry args={[0.55, 12]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.28} depthWrite={false} />
+      <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
+        <circleGeometry args={[0.62, 16]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.3} depthWrite={false} />
       </mesh>
-      <mesh geometry={capGeo} material={leather} position={[0, 0.72, 0]} scale={[0.72, 0.82, 0.58]} castShadow />
-      <mesh geometry={capGeo} material={cloth} position={[0, 0.82, 0]} scale={[0.58, 0.72, 0.5]} castShadow />
-      <mesh geometry={capGeo} material={steel} position={[0, 0.92, 0]} scale={[0.5, 0.55, 0.46]} castShadow />
-      <mesh geometry={boxGeo} material={steelDark} position={[0, 1.08, 0.02]} scale={[0.68, 0.44, 0.42]} castShadow />
-      <mesh geometry={boxGeo} material={bronze} position={[0, 1.08, 0.23]} scale={[0.34, 0.16, 0.045]} />
-      <mesh geometry={boxGeo} material={steel} position={[-0.43, 1.2, 0]} scale={[0.25, 0.18, 0.34]} castShadow />
-      <mesh geometry={boxGeo} material={steel} position={[0.43, 1.2, 0]} scale={[0.25, 0.18, 0.34]} castShadow />
-      <mesh geometry={boxGeo} material={clothLight} position={[-0.43, 0.98, 0]} scale={[0.18, 0.3, 0.2]} />
-      <mesh geometry={boxGeo} material={clothLight} position={[0.43, 0.98, 0]} scale={[0.18, 0.3, 0.2]} />
-      <mesh geometry={sphGeo} material={steel} position={[0, 1.52, 0]} scale={[0.24, 0.26, 0.24]} castShadow />
-      <mesh geometry={boxGeo} material={steelDark} position={[0, 1.5, 0.16]} scale={[0.28, 0.12, 0.1]} />
-      <mesh geometry={boxGeo} material={leather} position={[0, 1.47, 0.22]} scale={[0.2, 0.035, 0.035]} />
-      <mesh ref={crystal} material={jade} position={[0, 1.08, 0.22]} scale={[0.1, 0.15, 0.07]} geometry={boxGeo} />
-      <mesh material={bronze} position={[0, 1.08, 0.27]} scale={[0.16, 0.035, 0.025]} geometry={boxGeo} />
-      <mesh ref={cape} geometry={boxGeo} material={cloth} position={[0, 0.95, -0.3]} scale={[0.56, 0.92, 0.06]} castShadow />
-      <group ref={sword} position={[0.42, 0.92, 0.18]}>
+
+      {/* kaki dan sepatu */}
+      <mesh material={leather} position={[-0.2, 0.38, 0.02]} scale={[0.18, 0.5, 0.2]} castShadow geometry={capGeo} />
+      <mesh material={leather} position={[0.2, 0.38, 0.02]} scale={[0.18, 0.5, 0.2]} castShadow geometry={capGeo} />
+      <mesh material={steelDark} position={[-0.2, 0.16, 0.16]} scale={[0.2, 0.13, 0.34]} castShadow geometry={boxGeo} />
+      <mesh material={steelDark} position={[0.2, 0.16, 0.16]} scale={[0.2, 0.13, 0.34]} castShadow geometry={boxGeo} />
+
+      {/* jubah dan lapisan baju */}
+      <mesh material={leather} position={[0, 0.7, 0]} scale={[0.54, 0.72, 0.42]} castShadow geometry={capGeo} />
+      <mesh material={cloth} position={[0, 0.76, 0.02]} scale={[0.47, 0.62, 0.38]} castShadow geometry={capGeo} />
+      <mesh material={bronze} position={[0, 0.93, 0.36]} scale={[0.27, 0.16, 0.035]} geometry={boxGeo} />
+      <mesh material={leather} position={[0, 0.94, 0.02]} scale={[0.58, 0.075, 0.46]} geometry={boxGeo} />
+      <mesh material={jade} ref={crystal} position={[0, 0.96, 0.28]} scale={[0.1, 0.14, 0.06]} geometry={boxGeo} />
+
+      {/* bahu, lengan, dan sarung tangan */}
+      <mesh material={steel} position={[-0.48, 0.98, 0]} scale={[0.25, 0.18, 0.3]} castShadow geometry={boxGeo} />
+      <mesh material={steel} position={[0.48, 0.98, 0]} scale={[0.25, 0.18, 0.3]} castShadow geometry={boxGeo} />
+      <mesh material={clothLight} position={[-0.5, 0.73, 0]} scale={[0.16, 0.35, 0.18]} geometry={capGeo} />
+      <mesh material={clothLight} position={[0.5, 0.73, 0]} scale={[0.16, 0.35, 0.18]} geometry={capGeo} />
+      <mesh material={leather} position={[-0.5, 0.5, 0.08]} scale={[0.14, 0.14, 0.16]} geometry={sphGeo} />
+      <mesh material={leather} position={[0.5, 0.5, 0.08]} scale={[0.14, 0.14, 0.16]} geometry={sphGeo} />
+
+      {/* kepala, rambut, pelindung wajah */}
+      <mesh material={leather} position={[0, 1.43, 0]} scale={[0.3, 0.34, 0.29]} castShadow geometry={sphGeo} />
+      <mesh material={steel} position={[0, 1.5, 0]} scale={[0.34, 0.18, 0.32]} castShadow geometry={sphGeo} />
+      <mesh material={steelDark} position={[0, 1.42, 0.25]} scale={[0.28, 0.11, 0.08]} geometry={boxGeo} />
+      <mesh material={leather} position={[0, 1.41, 0.31]} scale={[0.19, 0.025, 0.025]} geometry={boxGeo} />
+      <mesh material={bronze} position={[0, 1.58, 0.02]} scale={[0.24, 0.035, 0.16]} geometry={boxGeo} />
+
+      {/* kain belakang */}
+      <mesh ref={cape} geometry={boxGeo} material={cloth} position={[0, 0.8, -0.32]} scale={[0.5, 0.95, 0.07]} castShadow />
+      <mesh material={jade} position={[0, 1.12, -0.39]} scale={[0.12, 0.2, 0.035]} geometry={boxGeo} />
+
+      {/* pedang */}
+      <group ref={sword} position={[0.48, 0.74, 0.18]}>
         <mesh geometry={boxGeo} material={steelDark} scale={[0.08, 0.08, 0.22]} />
-        <mesh geometry={boxGeo} material={steel} position={[0, 0.02, 0.55]} scale={[0.06, 0.025, 0.85]} />
-        <mesh material={bronze} position={[0, 0.02, 0.22]} scale={[0.07, 0.07, 0.07]} geometry={sphGeo} />
+        <mesh geometry={boxGeo} material={steel} position={[0, 0.02, 0.55]} scale={[0.065, 0.025, 0.85]} />
+        <mesh material={bronze} position={[0, 0.02, 0.22]} scale={[0.08, 0.07, 0.07]} geometry={sphGeo} />
       </group>
     </group>
   );
@@ -627,11 +668,11 @@ export function GameCanvas({ world }: { world: World }) {
       }}
     >
       <SimLoop world={world} />
-      <fog attach="fog" args={["#11151a", 18, 52]} />
+      <fog attach="fog" args={["#14201e", 20, 58]} />
       <hemisphereLight args={["#dbe4ea", "#3a302a", 0.82]} />
       <ambientLight intensity={0.38} />
       <directionalLight castShadow position={[14, 24, 10]} intensity={2.2} color="#c2ced6" shadow-mapSize={[1024, 1024]} shadow-camera-near={2} shadow-camera-far={70} shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} />
-      <Stars radius={90} depth={40} count={900} factor={2.4} saturation={0.15} fade speed={0.3} />
+      <Stars radius={90} depth={40} count={500} factor={1.8} saturation={0.08} fade speed={0.2} />
       <Arena world={world} />
       <SuryakertaWorld />
       <Knight world={world} />
