@@ -1120,6 +1120,7 @@ export class World {
   }
 
   private spawnEnemy(kind: Kind) {
+    if (WORLD_OBSERVATION_MODE) return;
     const e = this.enemies.find((x) => !x.alive);
     if (!e) return;
     const pos = this.spawnPos();
