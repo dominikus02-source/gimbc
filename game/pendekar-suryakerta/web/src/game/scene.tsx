@@ -47,15 +47,30 @@ function LandscapeWorld() {
     const clone = scene.clone(true);
     clone.traverse((object) => {
       const name = object.name.toLowerCase();
-      if (
+      const materials = "material" in object && object.material
+        ? Array.isArray(object.material) ? object.material : [object.material]
+        : [];
+      const materialNames = materials
+        .map((material) => (material as THREE.Material).name?.toLowerCase?.() ?? "")
+        .join(" ");
+
+      const isTallHouse =
         name.includes("rumahpanggung") ||
         name.includes("rumah_panggung") ||
         name.includes("rumah-panggung") ||
         name.includes("stilt_house") ||
         name.includes("stilt-house") ||
         name.includes("tall_house") ||
-        name.includes("tall-house")
-      ) {
+        name.includes("tall-house");
+
+      const isSnow =
+        name.includes("snow") ||
+        name.includes("salju") ||
+        name.includes("winter") ||
+        name.includes("frost") ||
+        name.includes("ice");
+
+      if (isTallHouse || isSnow || materialNames.includes("snow") || materialNames.includes("salju")) {
         object.visible = false;
       }
     });
